@@ -4,9 +4,6 @@ AUTH_TOKEN=infra \
 HTTP_PORT=8080 \
 VLAN=3080 \
 MQTT_URL=mqtt://localhost \
-RANCHER_HOST=10.19.88.248 \
-RANCHER_PORT=8080 \
-RANCHER_KEY=E79CA251FAFC0D4A8AC1 \
-RANCHER_SECRET=5PS5d5qq6PcMnk3uMEy6Q7uGRFyuG6VkVYytnf6t \
 DOMAIN=infra.ictu \
+SCRIPT_BASE_DIR=/tmp/local/data/scripts \
 nodemon index.coffee

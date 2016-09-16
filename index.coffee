@@ -8,12 +8,10 @@ config =
   domain: env.assert 'DOMAIN'
   mqtt:
     url: env.assert 'MQTT_URL'
-  rancher:
-    host: env.assert 'RANCHER_HOST'
-    port: env.assert 'RANCHER_PORT'
-    auth:
-      key: env.assert 'RANCHER_KEY'
-      secret: env.assert 'RANCHER_SECRET'
+  compose:
+    scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
+
+console.log 'Config \n\n', config, '\n\n'
 
 libcompose = (require './lib/compose') config
 
@@ -24,7 +22,7 @@ publishState = (instance, state) ->
 
 compose =
   events: null
-  actions: require('./lib/compose/actions') config.rancher, publishState
+  actions: require('./lib/compose/actions') config.compose, publishState
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
