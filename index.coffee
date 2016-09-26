@@ -20,16 +20,17 @@ mqtt = new Mqtt config.mqtt
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
 
-compose =
-  events: null
-  actions: require('./lib/compose/actions') config.compose, publishState
+compose = require('./lib/compose/actions') config.compose
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
   instanceName = data.instance.name
   composition = libcompose.augmentCompose instanceName, (libcompose.appdef2compose instanceName, data.app.definition)
-  compose.actions.start instanceName, composition
+  start = compose.start instanceName, composition
+  start.on 'pulling', (event) ->
+    event.instance = instanceName
+    mqtt.publish '/agent/docker/pulling', event
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
-  compose.actions.stop instanceName
+  compose.stop instanceName
