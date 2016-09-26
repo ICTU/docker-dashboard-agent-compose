@@ -1,40 +1,64 @@
-yaml  = require 'js-yaml'
-fs    = require 'fs'
-exec  = require('child_process').exec
+events = require 'events'
+exec   = require('child_process').exec
+spawn  = require('child_process').spawn
+yaml   = require 'js-yaml'
+fs     = require 'fs'
 
-module.exports = (config, publishState) ->
+module.exports = (config) ->
 
+  buildScriptPaths = (instance) ->
+    [scriptDir = "#{config.scriptBaseDir}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
   start: (instance, composition) ->
+    eventEmitter = new events.EventEmitter()
     compose = yaml.safeDump composition
-    scriptDir = "#{config.scriptBaseDir}/#{instance}"
-    scriptPath = "#{scriptDir}/docker-compose.yml"
+    [scriptDir, scriptPath] = buildScriptPaths instance
 
-    fs.mkdir scriptDir, (err) ->
-      unless not err or err.code is 'EEXIST'
-        console.log 'Cannot make scriptDir', scriptDir, err
-      else
-        fs.writeFile scriptPath, compose, (err) ->
-          if err then console.error 'ERR', err
-          else
-            exec "docker-compose -f #{scriptPath} -p #{instance} pull", (err, stdout, stderr) ->
-              if err
-                console.error 'ERR', err, stderr
-              else
-                console.log "docker-compose -f #{scriptPath} -p #{instance} pull", stdout
-                exec "docker-compose -f #{scriptPath} -p #{instance} up -d", (err2, stdout2, stderr2) ->
-                  if err2
-                     console.error 'ERR', err, stderr2
-                  else
-                    console.log "docker-compose -f #{scriptPath} -p #{instance} up -d", stdout2
+    pullCb = (data) ->
+      data = data.toString()
+      if m = data.match /(.+): Pulling from (.+)/i
+        [all, version, image] = m
+        eventEmitter.emit 'pulling', {image: image, version: version}
+      else console.log 'pull output unknown', data
+    upCb = (data) -> console.log 'UP', data.toString()
 
-
+    ensureMkdir scriptDir, ->
+      writeFile scriptPath, compose, ->
+        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], pullCb, ->
+          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d'], upCb, ->
+            console.log 'Done, started', instance
+    eventEmitter
 
   stop: (instance) ->
-    scriptDir = "#{config.scriptBaseDir}/#{instance}"
-    scriptPath = "#{scriptDir}/docker-compose.yml"
+    [scriptDir, scriptPath] = buildScriptPaths instance
 
-    exec "docker-compose -f #{scriptPath} -p #{instance} down --remove-orphans", (err, stdout, stderr) ->
-      if err then console.error 'ERR', err
-      else
-        console.log stdout, stderr
+    cb = (data) ->
+      console.log 'dc down', data.toString()
+
+    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], cb, ->
+      console.log 'Done, stopped', instance
+
+#
+# Helper functions to write files and run processes
+#
+
+runCmd = (cmd, args, stdoutCb, exitCb) ->
+  spawned = spawn cmd, args
+  if spawned.error
+    console.error "Error, unable to execute", cmd, args, pull.error
+  else
+    console.log 'success', cmd, args
+    spawned.stdout.on 'data', stdoutCb
+    spawned.stdout.on 'end', exitCb
+
+ensureMkdir = (scriptDir, success) ->
+  fs.mkdir scriptDir, (err) ->
+    unless not err or err.code is 'EEXIST'
+      console.log 'Cannot make dir', scriptDir, err
+    else
+      success()
+
+writeFile = (path, contents, success) ->
+  fs.writeFile path, contents, (err) ->
+    if err then console.error 'Error writing file', err
+    else success()
