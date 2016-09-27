@@ -49,6 +49,7 @@ runCmd = (cmd, args, stdoutCb, exitCb) ->
   else
     console.log 'success', cmd, args
     spawned.stdout.on 'data', stdoutCb
+    spawned.stderr.on 'data', (data) -> console.log 'stderr', data.toString()
     spawned.stdout.on 'end', exitCb
 
 ensureMkdir = (scriptDir, success) ->
