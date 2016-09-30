@@ -54,6 +54,7 @@ module.exports = (config) ->
             "#{path.join bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
           else "#{vsplit[1]}:#{vsplit[2]}"
         else v
+      delete service.volumes unless service.volumes
 
     for serviceName, service of doc
       addNetworkContainer serviceName, service
