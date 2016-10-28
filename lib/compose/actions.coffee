@@ -25,7 +25,7 @@ module.exports = (config) ->
     ensureMkdir scriptDir, ->
       writeFile scriptPath, compose, ->
         runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], pullCb, ->
-          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d'], upCb, ->
+          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], upCb, ->
             console.log 'Done, started', instance
     eventEmitter
 
