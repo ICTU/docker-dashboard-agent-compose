@@ -1,5 +1,5 @@
 {
-  "name": "docker-dashboard-agent-example",
+  "name": "docker-dashboard-agent-compose",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
