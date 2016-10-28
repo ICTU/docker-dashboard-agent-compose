@@ -35,9 +35,10 @@ compose = require('./lib/compose/actions') config.compose
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
+  console.log 'start', data
   instanceName = data.instance.name
   options = data.instance.options
-  composition = libcompose.augmentCompose instanceName, options, (libcompose.appdef2compose instanceName, data.app.definition)
+  composition = libcompose.augmentCompose instanceName, options, data.app.definition
   start = compose.start instanceName, composition
   start.on 'pulling', (event) ->
     event.instance = instanceName
