@@ -5,39 +5,29 @@ module.exports = (config) ->
   networkValue = "ens192 -i eth0 @CONTAINER_NAME@ dhclient @#{config.vlan}"
   networkEnv = 'eth0_pipework_cmd'
 
-  appdef2compose: (instance, doc) ->
-    delete doc.name
-    delete doc.version
-    delete doc.pic
-    delete doc.description
-    doc
-
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
-      labels = _.extend {}, service.labels
-      labels['bigboat/container/type'] = 'net'
-      subDomain = "#{instance}.#{config.domain}.#{config.tld}"
-      netcontainer =
-        image: 'www.docker-registry.isd.ictu:5000/pipes:1'
-        environment: eth0_pipework_cmd: networkValue
-        hostname: "#{serviceName}.#{subDomain}"
-        dns_search: subDomain
-        net: 'none'
-        labels: labels
+      if service.labels['bigboat.service.type'] is 'service'
+        labels = _.extend {}, service.labels
+        labels['bigboat.service.type'] = 'net'
+        subDomain = "#{instance}.#{config.domain}.#{config.tld}"
+        netcontainer =
+          image: 'www.docker-registry.isd.ictu:5000/pipes:1'
+          environment: eth0_pipework_cmd: networkValue
+          hostname: "#{serviceName}.#{subDomain}"
+          dns_search: subDomain
+          net: 'none'
+          labels: labels
+          stop_signal: 'SIGKILL'
+        if service.container_name
+          netcontainer['container_name'] = "#{service.container_name}-net"
 
-      doc["net-#{serviceName}"] = netcontainer
-
-    addNetworking = (serviceName, service) ->
-      delete service.hostname
-      service.net = "container:net-#{serviceName}"
-      # if service.depends_on
-      #   service.depends_on.push "net-#{serviceName}"
-      # else
-      #   service.depends_on = ["net-#{serviceName}"]
-      # if service.environment?.push
-      #   service.environment.push "#{networkEnv}=#{networkValue}"
-      # else
-      #   service.environment = _.merge {}, {"#{networkEnv}": networkValue}, service.environment
+        doc["bb-net-#{serviceName}"] = netcontainer
+        # remove the hostname if set in the service, the hostname is set from
+        # the network container
+        delete service.hostname
+        service.net = "container:bb-net-#{serviceName}"
+      else service.net = "container:bb-net-#{service.labels['bigboat.service.name']}"
 
     addVolumeMapping = (serviceName, service) ->
       bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
@@ -52,13 +42,17 @@ module.exports = (config) ->
         else if vsplit.length is 3
           if bucketPath
             "#{path.join bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
-          else "#{vsplit[1]}:#{vsplit[2]}"
+          else "#{vsplit[1]}"
         else v
       delete service.volumes unless service.volumes
 
+    addDockerMapping = (serviceName, service) ->
+      if service.labels['bigboat.container.map_docker'] is 'true'
+        service.volumes = [] unless service.volumes
+        service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
+
     for serviceName, service of doc
       addNetworkContainer serviceName, service
-      addNetworking serviceName, service
       addVolumeMapping serviceName, service
-
+      addDockerMapping serviceName, service
     doc
