@@ -48,29 +48,4 @@ agent.on 'stop', (data) ->
   instanceName = data.instance.name
   compose.stop instanceName
 
-agent.on '/storage/list', (params, data, callback) ->
-  srcpath = path.join config.dataDir, config.domain
-  dirList = fs.readdirSync srcpath
-  files = dirList.map (file) ->
-    stat = fs.statSync path.join(srcpath, file)
-    if stat.isDirectory()
-      name: file
-      created: stat.birthtime
-      isLocked: ".#{file}.copy.lock" in dirList
-  .filter (file) -> file?
-  callback null, files
-
-agent.on '/storage/delete', ({name}, data, callback) ->
-  srcpath = path.join config.dataDir, config.domain, name
-  fs.remove srcpath, callback
-
-agent.on '/storage/create', (params, {name, source}, callback) ->
-  targetpath = path.join config.dataDir, config.domain, name
-  if source
-    srcpath = path.join config.dataDir, config.domain, source
-    lockFile = path.join config.dataDir, config.domain, ".#{name}.copy.lock"
-    fs.writeFile lockFile, "Copying #{srcpath} to #{targetpath}..."
-    child_process.exec "cp -rp #{srcpath} #{targetpath}", ->
-      fs.unlink lockFile, callback
-  else
-    fs.mkdirs targetpath, callback
+require('./lib/storage') agent, mqtt, config
