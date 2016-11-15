@@ -1,3 +1,4 @@
+exec          = (require 'child_process').exec
 fs            = require 'fs-extra'
 path          = require 'path'
 
@@ -29,6 +30,7 @@ module.exports = (agent, mqtt, config) ->
 
   listStorageBuckets basePath, publishStorageBuckets
   fs.watch basePath, (eventType, filename) ->
+    console.log 'i saw something', eventType, filename
     listStorageBuckets basePath, publishStorageBuckets
 
   agent.on '/storage/list', (params, data, callback) ->
@@ -49,7 +51,30 @@ module.exports = (agent, mqtt, config) ->
       srcpath = path.join basePath, source
       lockFile = path.join basePath, ".#{name}.copy.lock"
       fs.writeFile lockFile, "Copying #{srcpath} to #{targetpath}...", ->
-        child_process.exec "cp -rp #{srcpath} #{targetpath}", ->
+        exec "cp -rp #{srcpath} #{targetpath}", ->
           fs.unlink lockFile, callback
     else
       fs.mkdirs targetpath, callback
+
+  agent.on '/datastore/usage', ({name}, data, callback) ->
+    exec "df -B1 #{basePath} | tail -1 | awk '{ print $2 }{ print $3}{ print $5}'", (err, stdout, stderr) ->
+      if err
+        console.error err
+        callback null, stderr
+      totalSize = stdout.split("\n")[0]
+      usedSize = stdout.split("\n")[1]
+      percentage = stdout.split("\n")[2]
+      callback null, { name: basePath, total: totalSize, used: usedSize, percentage: percentage }
+
+  agent.on '/storage/size', ({name}, data, callback) ->
+    targetpath = path.join basePath, name
+    lockFile = path.join basePath, ".#{name}.size.lock"
+    console.log "Retrieving size #{targetpath}"
+    fs.writeFile lockFile, "Retrieving size #{targetpath} ...", ->
+      exec "du -sb #{targetpath} | awk '{ print $1 }'", (err, stdout, stderr) ->
+        if err
+          console.error err
+          fs.unlink lockFile, callback(null, stderr)
+        bucketSize = stdout.replace(/^\s+|\s+$/g, '')
+        fs.unlink lockFile, ->
+          callback null, { name: name, size: bucketSize}
