@@ -3,9 +3,6 @@ fs            = require 'fs-extra'
 path          = require 'path'
 
 module.exports = (agent, mqtt, config) ->
-  publishStorageBuckets = (err, buckets) ->
-    mqtt.publish '/agent/storage/buckets', buckets unless err
-
   publishDataStoreUsage = (dir) -> ->
     exec "df -B1 #{dir} | tail -1 | awk '{ print $2 }{ print $3}{ print $5}'", (err, stdout, stderr) ->
       if err
@@ -19,6 +16,11 @@ module.exports = (agent, mqtt, config) ->
         total: totalSize
         used: usedSize
         percentage: percentage
+
+  setInterval publishDataStoreUsage(config.dataDir), 5000
+
+  publishStorageBuckets = (err, buckets) ->
+    mqtt.publish '/agent/storage/buckets', buckets unless err
 
   listStorageBuckets = (dir, cb) ->
     fs.readdir dir, (err, dirList) ->
@@ -40,9 +42,8 @@ module.exports = (agent, mqtt, config) ->
         catch ex
           cb? ex, null
 
-  basePath = path.join config.dataDir, config.domain
 
-  setInterval publishDataStoreUsage(basePath), 5000
+  basePath = path.join config.dataDir, config.domain
 
   listStorageBuckets basePath, publishStorageBuckets
   fs.watch basePath, (eventType, filename) ->
