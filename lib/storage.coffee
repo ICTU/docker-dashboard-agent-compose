@@ -6,6 +6,20 @@ module.exports = (agent, mqtt, config) ->
   publishStorageBuckets = (err, buckets) ->
     mqtt.publish '/agent/storage/buckets', buckets unless err
 
+  publishDataStoreUsage = (dir) -> ->
+    exec "df -B1 #{dir} | tail -1 | awk '{ print $2 }{ print $3}{ print $5}'", (err, stdout, stderr) ->
+      if err
+        console.error err
+        callback null, stderr
+      totalSize = stdout.split("\n")[0]
+      usedSize = stdout.split("\n")[1]
+      percentage = stdout.split("\n")[2]
+      mqtt.publish '/agent/storage/size',
+        name: dir
+        total: totalSize
+        used: usedSize
+        percentage: percentage
+
   listStorageBuckets = (dir, cb) ->
     fs.readdir dir, (err, dirList) ->
       if err
@@ -28,9 +42,10 @@ module.exports = (agent, mqtt, config) ->
 
   basePath = path.join config.dataDir, config.domain
 
+  setInterval publishDataStoreUsage(basePath), 5000
+
   listStorageBuckets basePath, publishStorageBuckets
   fs.watch basePath, (eventType, filename) ->
-    console.log 'i saw something', eventType, filename
     listStorageBuckets basePath, publishStorageBuckets
 
   agent.on '/storage/list', (params, data, callback) ->
@@ -55,16 +70,6 @@ module.exports = (agent, mqtt, config) ->
           fs.unlink lockFile, callback
     else
       fs.mkdirs targetpath, callback
-
-  agent.on '/datastore/usage', ({name}, data, callback) ->
-    exec "df -B1 #{basePath} | tail -1 | awk '{ print $2 }{ print $3}{ print $5}'", (err, stdout, stderr) ->
-      if err
-        console.error err
-        callback null, stderr
-      totalSize = stdout.split("\n")[0]
-      usedSize = stdout.split("\n")[1]
-      percentage = stdout.split("\n")[2]
-      callback null, { name: basePath, total: totalSize, used: usedSize, percentage: percentage }
 
   agent.on '/storage/size', ({name}, data, callback) ->
     targetpath = path.join basePath, name
