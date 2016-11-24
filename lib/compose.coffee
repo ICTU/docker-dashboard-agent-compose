@@ -2,7 +2,7 @@ _     = require 'lodash'
 path  = require 'path'
 
 module.exports = (config) ->
-  networkValue = "ens192 -i eth0 @CONTAINER_NAME@ dhclient @#{config.vlan}"
+  networkValue = "eth1 -i eth0 @CONTAINER_NAME@ dhclient @#{config.vlan}"
   networkEnv = 'eth0_pipework_cmd'
 
   augmentCompose: (instance, options, doc) ->
