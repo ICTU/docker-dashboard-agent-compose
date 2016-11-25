@@ -1,15 +1,15 @@
 events = require 'events'
-exec   = require('child_process').exec
 spawn  = require('child_process').spawn
 yaml   = require 'js-yaml'
 fs     = require 'fs'
+_      = require 'lodash'
 
 module.exports = (config) ->
 
   buildScriptPaths = (instance) ->
-    [scriptDir = "#{config.scriptBaseDir}/#{instance}", "#{scriptDir}/docker-compose.yml"]
+    [scriptDir = "#{config.compose.scriptBaseDir}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
-  start: (instance, composition) ->
+  start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
     compose = yaml.safeDump composition
     [scriptDir, scriptPath] = buildScriptPaths instance
@@ -22,28 +22,40 @@ module.exports = (config) ->
       else console.log 'pull output unknown', data
     upCb = (data) -> console.log 'UP', data.toString()
 
+    env = buildEnv config, data
+
     ensureMkdir scriptDir, ->
       writeFile scriptPath, compose, ->
-        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], pullCb, ->
-          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], upCb, ->
+        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], env, pullCb, ->
+          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], env, upCb, ->
             console.log 'Done, started', instance
     eventEmitter
 
-  stop: (instance) ->
+  stop: (instance, data) ->
     [scriptDir, scriptPath] = buildScriptPaths instance
 
     cb = (data) ->
       console.log 'dc down', data.toString()
 
-    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], cb, ->
+    env = buildEnv config, data
+
+    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, cb, ->
       console.log 'Done, stopped', instance
 
 #
 # Helper functions to write files and run processes
 #
 
-runCmd = (cmd, args, stdoutCb, exitCb) ->
-  spawned = spawn cmd, args
+buildEnv = (cfg, instanceCfg) ->
+  BIGBOAT_PROJECT: cfg.domain
+  BIGBOAT_DOMAIN: cfg.domain
+  BIGBOAT_TLD: cfg.tld
+  BIGBOAT_APPLICATION_NAME: instanceCfg.app.name
+  BIGBOAT_APPLICATION_VERSION: instanceCfg.app.version
+  BIGBOAT_INSTANCE_NAME: instanceCfg.instance.name
+
+runCmd = (cmd, args, env, stdoutCb, exitCb) ->
+  spawned = spawn cmd, args, env: (_.extend {}, process.env, env)
   if spawned.error
     console.error "Error, unable to execute", cmd, args, pull.error
   else
