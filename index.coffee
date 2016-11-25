@@ -10,6 +10,7 @@ config =
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
+  remotefsUrl: env.assert 'REMOTEFS_URL'
   mqtt:
     url: env.assert 'MQTT_URL'
   compose:
