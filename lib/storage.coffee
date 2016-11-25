@@ -1,6 +1,7 @@
 exec          = (require 'child_process').exec
 fs            = require 'fs-extra'
 path          = require 'path'
+request       = require 'request'
 
 module.exports = (agent, mqtt, config) ->
   remoteFs = (cmd, payload, cb) ->
