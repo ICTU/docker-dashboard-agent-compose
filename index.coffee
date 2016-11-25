@@ -10,6 +10,7 @@ config =
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
+  host_if: env.assert 'HOST_IF'
   mqtt:
     url: env.assert 'MQTT_URL'
   compose:
@@ -18,6 +19,7 @@ config =
 console.log 'Config \n\n', config, '\n\n'
 
 try
+
   fs.mkdirSync (projectDataPath = path.join config.dataDir, config.domain)
 catch err
   unless err.code is 'EEXIST'
@@ -31,7 +33,7 @@ mqtt = new Mqtt config.mqtt
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
 
-compose = require('./lib/compose/actions') config.compose
+compose = require('./lib/compose/actions') config
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
@@ -39,13 +41,13 @@ agent.on 'start', (data) ->
   instanceName = data.instance.name
   options = data.instance.options
   composition = libcompose.augmentCompose instanceName, options, data.app.definition
-  start = compose.start instanceName, composition
+  start = compose.start instanceName, composition, data
   start.on 'pulling', (event) ->
     event.instance = instanceName
     mqtt.publish '/agent/docker/pulling', event
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
-  compose.stop instanceName
+  compose.stop instanceName, data
 
 require('./lib/storage') agent, mqtt, config
