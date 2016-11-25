@@ -16,7 +16,7 @@ module.exports = (config) ->
           environment: eth0_pipework_cmd: networkValue
           hostname: "#{serviceName}.#{subDomain}"
           dns_search: subDomain
-          net: 'none'
+          network_mode: 'none'
           labels: labels
           stop_signal: 'SIGKILL'
         if service.container_name
@@ -26,8 +26,9 @@ module.exports = (config) ->
         # remove the hostname if set in the service, the hostname is set from
         # the network container
         delete service.hostname
-        service.net = "container:bb-net-#{serviceName}"
-      else service.net = "container:bb-net-#{service.labels['bigboat.service.name']}"
+        delete service.net
+        service.network_mode = "service:bb-net-#{serviceName}"
+      else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
     addVolumeMapping = (serviceName, service) ->
       bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
@@ -46,6 +47,11 @@ module.exports = (config) ->
         else v
       delete service.volumes unless service.volumes
 
+    migrateLinksToDependsOn = (serviceName, service) ->
+      if service.links
+        service.depends_on = _.union (service.depends_on or []), service.links
+        delete service.links
+
     addDockerMapping = (serviceName, service) ->
       if service.labels['bigboat.container.map_docker'] is 'true'
         service.volumes = [] unless service.volumes
@@ -55,4 +61,7 @@ module.exports = (config) ->
       addNetworkContainer serviceName, service
       addVolumeMapping serviceName, service
       addDockerMapping serviceName, service
-    doc
+      migrateLinksToDependsOn serviceName, service
+
+    version: '2'
+    services: doc
