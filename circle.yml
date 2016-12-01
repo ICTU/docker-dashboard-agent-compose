@@ -1,0 +1,23 @@
+machine:
+  services:
+    - docker
+
+dependencies:
+  override:
+    - echo "no install"
+
+test:
+  override:
+    - echo "no tests!"
+
+deployment:
+  hub:
+    tag: /^[0-9]+\.[0-9]+\.[0-9]+$/
+    commands:
+      - docker build -t ictu/bigboat-agent-compose:${CIRCLE_TAG} .
+      - MAJOR_VERSION=${CIRCLE_TAG/.*}; docker tag ictu/bigboat-agent-compose:${CIRCLE_TAG} ictu/bigboat-agent-compose:${MAJOR_VERSION}
+      - MINOR_VERSION=${CIRCLE_TAG%.*}; docker tag ictu/bigboat-agent-compose:${CIRCLE_TAG} ictu/bigboat-agent-compose:${MINOR_VERSION}
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker push ictu/bigboat-agent-compose:${CIRCLE_TAG}
+      - docker push ictu/bigboat-agent-compose:${MINOR_VERSION}
+      - docker push ictu/bigboat-agent-compose:${MAJOR_VERSION}
