@@ -11,6 +11,7 @@ config =
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
   host_if: env.assert 'HOST_IF'
+  remotefsUrl: env.assert 'REMOTEFS_URL'
   mqtt:
     url: env.assert 'MQTT_URL'
   compose:

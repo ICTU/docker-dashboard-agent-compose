@@ -1,8 +1,18 @@
 exec          = (require 'child_process').exec
 fs            = require 'fs-extra'
 path          = require 'path'
+request       = require 'request'
 
 module.exports = (agent, mqtt, config) ->
+  remoteFs = (cmd, payload, cb) ->
+    request
+      url: "#{config.remotefsUrl}/fs/#{cmd}"
+      method: 'POST'
+      json: payload
+      , (err, res, body) ->
+        console.error err if err
+        cb err, body
+
   publishDataStoreUsage = (dir) -> ->
     exec "df -B1 #{dir} | tail -1 | awk '{ print $2 }{ print $3}{ print $5}'", (err, stdout, stderr) ->
       if err
@@ -55,32 +65,30 @@ module.exports = (agent, mqtt, config) ->
       callback()
 
   agent.on '/storage/delete', ({name}, data, callback) ->
-    srcpath = path.join basePath, name
+    targetpath = path.join '/', config.domain, name
     lockFile = path.join basePath, ".#{name}.delete.lock"
-    fs.writeFile lockFile, "Deleting #{srcpath}...", ->
-      fs.remove srcpath, ->
+    fs.writeFile lockFile, "Deleting #{targetpath}...", ->
+      remoteFs 'rm', {dir: targetpath}, ->
         fs.unlink lockFile, callback
 
   agent.on '/storage/create', (params, {name, source}, callback) ->
-    targetpath = path.join basePath, name
     if source
-      srcpath = path.join basePath, source
+      srcpath = path.join '/', config.domain, source
+      targetpath = path.join '/', config.domain, name
       lockFile = path.join basePath, ".#{name}.copy.lock"
       fs.writeFile lockFile, "Copying #{srcpath} to #{targetpath}...", ->
-        exec "cp -rp #{srcpath} #{targetpath}", ->
+        remoteFs 'cp', {source: srcpath, destination: targetpath}, ->
           fs.unlink lockFile, callback
     else
+      targetpath = path.join basePath, name
+      console.log "Creating bucket #{targetpath}"
       fs.mkdirs targetpath, callback
 
   agent.on '/storage/size', ({name}, data, callback) ->
-    targetpath = path.join basePath, name
+    targetpath = path.join '/', config.domain, name
     lockFile = path.join basePath, ".#{name}.size.lock"
     console.log "Retrieving size #{targetpath}"
     fs.writeFile lockFile, "Retrieving size #{targetpath} ...", ->
-      exec "du -sb #{targetpath} | awk '{ print $1 }'", (err, stdout, stderr) ->
-        if err
-          console.error err
-          fs.unlink lockFile, callback(null, stderr)
-        bucketSize = stdout.replace(/^\s+|\s+$/g, '')
+      remoteFs 'du', {dir: targetpath}, (err, response) ->
         fs.unlink lockFile, ->
-          callback null, { name: name, size: bucketSize}
+          callback null, { name: name, size: response.size}
