@@ -12,7 +12,7 @@ module.exports = (config) ->
         labels['bigboat.service.type'] = 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
         netcontainer =
-          image: 'www.docker-registry.isd.ictu:5000/pipes:1'
+          image: 'ictu/pipes'
           environment: eth0_pipework_cmd: networkValue
           hostname: "#{serviceName}.#{subDomain}"
           dns_search: subDomain
