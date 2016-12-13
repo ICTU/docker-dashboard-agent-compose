@@ -57,6 +57,19 @@ module.exports = (config) ->
       delete service.volumes unless service.volumes
       service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
+    restrictCompose = (serviceName, service) ->
+      delete service.cap_add
+      delete service.cap_drop
+      delete service.cgroup_parent
+      delete service.devices
+      delete service.dns
+      delete service.dns_search
+      delete service.tmpfs
+      delete service.networks
+      delete service.privileged
+
+
+
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
         service.depends_on = _.union (service.depends_on or []), service.links
@@ -72,6 +85,7 @@ module.exports = (config) ->
       addVolumeMapping serviceName, service
       addDockerMapping serviceName, service
       migrateLinksToDependsOn serviceName, service
+      restrictCompose serviceName, service
 
     version: '2'
     services: doc
