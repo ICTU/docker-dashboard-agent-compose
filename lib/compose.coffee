@@ -1,5 +1,6 @@
-_     = require 'lodash'
-path  = require 'path'
+_         = require 'lodash'
+path      = require 'path'
+resolvep  = require 'resolve-path'
 
 module.exports = (config) ->
   networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient @#{config.vlan}"
@@ -30,22 +31,31 @@ module.exports = (config) ->
         service.network_mode = "service:bb-net-#{serviceName}"
       else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
+    resolvePath = (root, path) ->
+      path = path[1...] if path[0] is '/'
+      resolvep root, path
+
     addVolumeMapping = (serviceName, service) ->
       bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
       service.volumes = service.volumes?.map (v) ->
         vsplit = v.split ':'
-        if vsplit.length is 2
-          if vsplit[1] in ['rw', 'ro']
-            v
-          else if bucketPath
-            "#{path.join bucketPath, vsplit[0]}:#{vsplit[1]}"
-          else vsplit[1]
-        else if vsplit.length is 3
-          if bucketPath
-            "#{path.join bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
-          else "#{vsplit[1]}"
-        else v
+        try
+          if vsplit.length is 2
+            if vsplit[1] in ['rw', 'ro']
+              v
+            else if bucketPath
+              "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}"
+            else vsplit[1]
+          else if vsplit.length is 3
+            if bucketPath
+              "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
+            else "#{vsplit[1]}"
+          else v
+        catch e
+          console.error "Error while mapping volumes. Root: #{bucketPath}, path: #{v}", e
+          null
       delete service.volumes unless service.volumes
+      service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
