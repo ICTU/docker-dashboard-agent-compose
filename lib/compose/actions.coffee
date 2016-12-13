@@ -2,12 +2,13 @@ events = require 'events'
 spawn  = require('child_process').spawn
 yaml   = require 'js-yaml'
 fs     = require 'fs'
+mkdirp = require 'mkdirp'
 _      = require 'lodash'
 
 module.exports = (config) ->
 
   buildScriptPaths = (instance) ->
-    [scriptDir = "#{config.compose.scriptBaseDir}/#{instance}", "#{scriptDir}/docker-compose.yml"]
+    [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
@@ -65,7 +66,7 @@ runCmd = (cmd, args, env, stdoutCb, exitCb) ->
     spawned.stdout.on 'end', exitCb
 
 ensureMkdir = (scriptDir, success) ->
-  fs.mkdir scriptDir, (err) ->
+  mkdirp scriptDir, (err) ->
     unless not err or err.code is 'EEXIST'
       console.log 'Cannot make dir', scriptDir, err
     else
