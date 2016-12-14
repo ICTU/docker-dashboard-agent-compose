@@ -6,7 +6,7 @@ env           = require './lib/env'
 packageJson   = require './package.json'
 
 config =
-  vlan: env.assert 'VLAN'
+  vlan: env.assertVlan 'VLAN'
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
@@ -38,7 +38,6 @@ compose = require('./lib/compose/actions') config
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
-  console.log 'start', data
   instanceName = data.instance.name
   options = data.instance.options
   composition = libcompose.augmentCompose instanceName, options, data.app.definition
