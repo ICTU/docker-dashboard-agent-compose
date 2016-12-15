@@ -4,7 +4,7 @@ resolvep  = require 'resolve-path'
 
 module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}".
+  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
   networkEnv = 'eth0_pipework_cmd'
 
   augmentCompose: (instance, options, doc) ->
