@@ -68,8 +68,7 @@ module.exports = (config) ->
       delete service.tmpfs
       delete service.networks
       delete service.privileged
-
-
+      delete service.ports
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
