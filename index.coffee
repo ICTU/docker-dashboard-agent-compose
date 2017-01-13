@@ -1,3 +1,8 @@
+require("./out/goog/bootstrap/nodejs");
+require("./out/cljs/core")
+require('./out/compose/compose')
+goog.require("compose.compose")
+
 fs            = require 'fs-extra'
 path          = require 'path'
 server        = require 'docker-dashboard-agent-api'
@@ -20,7 +25,6 @@ config =
 console.log 'Config \n\n', config, '\n\n'
 
 try
-
   fs.mkdirSync (projectDataPath = path.join config.dataDir, config.domain)
 catch err
   unless err.code is 'EEXIST'
@@ -41,10 +45,12 @@ agent.on 'start', (data) ->
   instanceName = data.instance.name
   options = data.instance.options
   composition = libcompose.augmentCompose instanceName, options, data.app.definition
-  start = compose.start instanceName, composition, data
-  start.on 'pulling', (event) ->
-    event.instance = instanceName
-    mqtt.publish '/agent/docker/pulling', event
+  console.log 'wiee!', data
+  global.compose.compose.xyz data.app.definition
+  # start = compose.start instanceName, composition, data
+  # start.on 'pulling', (event) ->
+  #   event.instance = instanceName
+  #   mqtt.publish '/agent/docker/pulling', event
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
