@@ -8,7 +8,7 @@
             [lein-cljsbuild "1.1.5"]]
   :npm {:dependencies [[source-map-support "0.4.0"]
                        [lodash "4.17.4"]]}
-  :source-paths ["clojure" "target/classes"]
+  :source-paths ["src/clojure" "target/classes"]
   :clean-targets ["out" "release"]
   :target-path "target"
 
