@@ -48,10 +48,10 @@ agent.on 'start', (data) ->
   composition = libcompose.augmentCompose instanceName, options, composev2
   console.log 'wiee!', composition
   console.log "============="
-  # start = compose.start instanceName, composition, data
-  # start.on 'pulling', (event) ->
-  #   event.instance = instanceName
-  #   mqtt.publish '/agent/docker/pulling', event
+  start = compose.start instanceName, composition, data
+  start.on 'pulling', (event) ->
+    event.instance = instanceName
+    mqtt.publish '/agent/docker/pulling', event
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
