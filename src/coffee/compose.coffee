@@ -24,7 +24,7 @@ module.exports = (config) ->
         if service.container_name
           netcontainer['container_name'] = "#{service.container_name}-net"
 
-        doc["bb-net-#{serviceName}"] = netcontainer
+        doc.services["bb-net-#{serviceName}"] = netcontainer
         # remove the hostname if set in the service, the hostname is set from
         # the network container
         delete service.hostname
@@ -90,5 +90,9 @@ module.exports = (config) ->
       addDockerMapping serviceName, service
       migrateLinksToDependsOn serviceName, service
       restrictCompose serviceName, service
+
+    delete doc.volumes
+    delete doc.networks
+
 
     doc
