@@ -6,8 +6,8 @@ goog.require("compose.compose")
 fs            = require 'fs-extra'
 path          = require 'path'
 server        = require 'docker-dashboard-agent-api'
-Mqtt          = require './lib/mqtt'
-env           = require './lib/env'
+Mqtt          = require './src/coffee/mqtt'
+env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
 config =
@@ -31,22 +31,23 @@ catch err
     console.error 'Unable to create project data directory', projectDataPath
     process.exit 1
 
-libcompose = (require './lib/compose') config
+libcompose = (require './src/coffee/compose') config
 
 mqtt = new Mqtt config.mqtt
 
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
 
-compose = require('./lib/compose/actions') config
+compose = require('./src/coffee/compose/actions') config
 
 agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
   instanceName = data.instance.name
   options = data.instance.options
-  composition = libcompose.augmentCompose instanceName, options, data.app.definition
-  console.log 'wiee!', data
-  global.compose.compose.xyz data.app.definition
+  composev2 = global.compose.compose.mapv2 data.app.definition
+  composition = libcompose.augmentCompose instanceName, options, composev2
+  console.log 'wiee!', composition
+  console.log "============="
   # start = compose.start instanceName, composition, data
   # start.on 'pulling', (event) ->
   #   event.instance = instanceName
@@ -56,4 +57,4 @@ agent.on 'stop', (data) ->
   instanceName = data.instance.name
   compose.stop instanceName, data
 
-require('./lib/storage') agent, mqtt, config
+require('./src/coffee/storage') agent, mqtt, config
