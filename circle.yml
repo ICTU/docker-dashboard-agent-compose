@@ -30,6 +30,6 @@ deployment:
   clojure:
     branch: clojure
     commands:
-      - docker tag ictu/bigboat-agent-compose:clojure ictu/bigboat-agent-compose:latest
+      - docker tag ictu/bigboat-agent-compose:latest ictu/bigboat-agent-compose:clojure
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push ictu/bigboat-agent-compose:clojure
