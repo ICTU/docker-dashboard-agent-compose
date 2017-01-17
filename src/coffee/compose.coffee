@@ -72,7 +72,7 @@ module.exports = (config) ->
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
-        service.depends_on = _.union (service.depends_on or []), service.links
+        service.depends_on = (_.union (service.depends_on or []), service.links).map (s) -> s.split(':')[0]
         delete service.links
 
     addDockerMapping = (serviceName, service) ->
