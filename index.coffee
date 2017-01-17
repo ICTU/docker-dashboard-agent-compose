@@ -1,6 +1,6 @@
-require("./out/goog/bootstrap/nodejs");
-require("./out/cljs/core")
-require('./out/compose/compose')
+require("./target/goog/bootstrap/nodejs");
+require("./target/cljs/core")
+require('./target/compose/compose')
 goog.require("compose.compose")
 
 fs            = require 'fs-extra'
