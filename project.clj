@@ -26,5 +26,5 @@
         :target :nodejs
         :modules
         { :compose
-          { :output-to "compose/compose.js"
+          { :output-to "target/compose/compose.js"
             :entries #{compose.compose}}}}}]})
