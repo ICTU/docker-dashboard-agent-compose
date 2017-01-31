@@ -35,15 +35,15 @@ module.exports = (config) ->
     eventEmitter
 
   stop: (instance, data) ->
+    eventEmitter = new events.EventEmitter()
     [scriptDir, scriptPath] = buildScriptPaths instance
 
-    cb = (data) ->
-      console.log 'dc down', data.toString()
-
     env = buildEnv config, data
+    emitLogCb = (data) -> eventEmitter.emit 'teardown-log', data.toString()
 
-    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: cb}, ->
+    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
       console.log 'Done, stopped', instance
+    eventEmitter
 
 #
 # Helper functions to write files and run processes
