@@ -52,9 +52,20 @@ agent.on 'start', (data) ->
   start.on 'pulling', (event) ->
     event.instance = instanceName
     mqtt.publish '/agent/docker/pulling', event
+  start.on 'startup-log', (logData) ->
+    event =
+      instance: instanceName
+      data: logData
+    mqtt.publish '/agent/docker/log/startup', event
+
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
-  compose.stop instanceName, data
+  stop = compose.stop instanceName, data
+  stop.on 'teardown-log', (logData) ->
+    event =
+      instance: instanceName
+      data: logData
+    mqtt.publish '/agent/docker/log/teardown', event
 
 require('./src/coffee/storage') agent, mqtt, config
