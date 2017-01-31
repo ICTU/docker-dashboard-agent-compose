@@ -25,10 +25,12 @@ module.exports = (config) ->
 
     env = buildEnv config, data
 
+    emitLogCb = (data) -> eventEmitter.emit 'startup-log', data.toString()
+
     ensureMkdir scriptDir, ->
       writeFile scriptPath, compose, ->
-        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], env, pullCb, ->
-          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], env, upCb, ->
+        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
+          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], env, {stderr: emitLogCb}, ->
             console.log 'Done, started', instance
     eventEmitter
 
@@ -40,7 +42,7 @@ module.exports = (config) ->
 
     env = buildEnv config, data
 
-    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, cb, ->
+    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: cb}, ->
       console.log 'Done, stopped', instance
 
 #
@@ -55,14 +57,14 @@ buildEnv = (cfg, instanceCfg) ->
   BIGBOAT_APPLICATION_VERSION: instanceCfg.app.version
   BIGBOAT_INSTANCE_NAME: instanceCfg.instance.name
 
-runCmd = (cmd, args, env, stdoutCb, exitCb) ->
+runCmd = (cmd, args, env, callbacks, exitCb) ->
   spawned = spawn cmd, args, env: (_.extend {}, process.env, env)
   if spawned.error
     console.error "Error, unable to execute", cmd, args, pull.error
   else
     console.log 'success', cmd, args
-    spawned.stdout.on 'data', stdoutCb
-    spawned.stderr.on 'data', (data) -> console.log 'stderr', data.toString()
+    spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
+    spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
     spawned.stdout.on 'end', exitCb
 
 ensureMkdir = (scriptDir, success) ->
