@@ -65,15 +65,24 @@ module.exports = (config) ->
       delete service.devices
       delete service.dns
       delete service.dns_search
-      delete service.tmpfs
       delete service.networks
-      delete service.privileged
       delete service.ports
+      delete service.privileged
+      delete service.tmpfs
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
         service.depends_on = (_.union (service.depends_on or []), service.links).map (s) -> s.split(':')[0]
         delete service.links
+
+    migrateLogging = (serviceName, service) ->
+       # if log_driver is set, that means we are in a compose v1 and logging is not present, no need to merge
+      if service.log_driver
+        service.logging =
+          driver: service.log_driver
+        service.logging.options = service.log_opt if service.log_opt
+        delete service.log_driver
+        delete service.log_opt
 
     addDockerMapping = (serviceName, service) ->
       if service.labels['bigboat.container.map_docker'] is 'true'
@@ -89,6 +98,7 @@ module.exports = (config) ->
       addVolumeMapping serviceName, service
       addDockerMapping serviceName, service
       migrateLinksToDependsOn serviceName, service
+      migrateLogging serviceName, service
       restrictCompose serviceName, service
 
     delete doc.volumes
