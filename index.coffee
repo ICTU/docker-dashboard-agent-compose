@@ -46,8 +46,7 @@ agent.on 'start', (data) ->
   options = data.instance.options
   composev2 = global.compose.compose.mapv2 data.app.definition
   composition = libcompose.augmentCompose instanceName, options, composev2
-  console.log 'wiee!', composition
-  console.log "============="
+
   start = compose.start instanceName, composition, data
   start.on 'pulling', (event) ->
     event.instance = instanceName
