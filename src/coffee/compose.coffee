@@ -10,8 +10,8 @@ module.exports = (config) ->
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
       if service.labels['bigboat.service.type'] is 'service'
-        labels = _.extend {}, service.labels
-        labels['bigboat.service.type'] = 'net'
+        labels = _.extend {}, service.labels,
+          'bigboat.service.type': 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
         netcontainer =
           image: 'ictu/pipes'
@@ -84,19 +84,15 @@ module.exports = (config) ->
         delete service.log_driver
         delete service.log_opt
 
-    addDockerMapping = (serviceName, service) ->
-      if service.labels['bigboat.container.map_docker'] is 'true'
-        service.volumes = [] unless service.volumes
-        service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
-
-    console.log '===='
-    console.log doc
+    addExtraLabels = (serviceName, service) ->
+      service.labels = _.extend {}, service.labels,
+        'bigboat.domain': config.domain
+        'bigboat.tld': config.tld
 
     for serviceName, service of doc.services
-      console.log serviceName, service
+      addExtraLabels serviceName, service
       addNetworkContainer serviceName, service
       addVolumeMapping serviceName, service
-      addDockerMapping serviceName, service
       migrateLinksToDependsOn serviceName, service
       migrateLogging serviceName, service
       restrictCompose serviceName, service
