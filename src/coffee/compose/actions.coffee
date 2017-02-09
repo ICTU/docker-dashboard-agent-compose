@@ -10,10 +10,13 @@ module.exports = (config) ->
   buildScriptPaths = (instance) ->
     [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
+  composeProject = (instance) -> "#{config.domain}-#{instance}"
+
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
     compose = yaml.safeDump composition
     [scriptDir, scriptPath] = buildScriptPaths instance
+    composeProjectName = composeProject instance
 
     pullCb = (data) ->
       data = data.toString()
@@ -29,20 +32,31 @@ module.exports = (config) ->
 
     ensureMkdir scriptDir, ->
       writeFile scriptPath, compose, ->
-        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
-          runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'up', '-d', '--remove-orphans'], env, {stderr: emitLogCb}, ->
-            console.log 'Done, started', instance
+        runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
+          runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+            console.log 'Done, started', composeProjectName
     eventEmitter
 
   stop: (instance, data) ->
     eventEmitter = new events.EventEmitter()
     [scriptDir, scriptPath] = buildScriptPaths instance
+    composeProjectName = composeProject instance
 
     env = buildEnv config, data
-    emitLogCb = (data) -> eventEmitter.emit 'teardown-log', data.toString()
+    emitCbCalled = false
+    emitLogCb = (data) ->
+      emitCbCalled = true
+      eventEmitter.emit 'teardown-log', data.toString()
 
-    runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
-      console.log 'Done, stopped', instance
+    runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+      if emitCbCalled
+        console.log 'Done, stopped', composeProjectName
+      else
+        # TODO: this fallback mechanism should be removed in future versions (e.g. v + 10), current(v)=2.0.1
+        console.log "#{composeProjectName} did not stop, falling back on old stop behavior based on instance name only"
+        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+          console.log 'Done, stopped', composeProjectName
+
     eventEmitter
 
 #
@@ -65,7 +79,7 @@ runCmd = (cmd, args, env, callbacks, exitCb) ->
     console.log 'success', cmd, args
     spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
     spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
-    spawned.stdout.on 'end', exitCb
+    spawned.on 'close', exitCb
 
 ensureMkdir = (scriptDir, success) ->
   mkdirp scriptDir, (err) ->
