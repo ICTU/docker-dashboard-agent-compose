@@ -9,7 +9,7 @@ module.exports = (config) ->
 
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
-      if service.labels['bigboat.service.type'] is 'service'
+      if service.labels['bigboat.service.type'] in ['service', 'oneoff']
         labels = _.extend {}, service.labels,
           'bigboat.service.type': 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
