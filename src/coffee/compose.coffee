@@ -89,10 +89,16 @@ module.exports = (config) ->
         'bigboat.domain': config.domain
         'bigboat.tld': config.tld
 
+    addDockerMapping = (serviceName, service) ->
+      if service.labels['bigboat.container.map_docker'] is 'true'
+        service.volumes = [] unless service.volumes
+        service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
+
     for serviceName, service of doc.services
       addExtraLabels serviceName, service
       addNetworkContainer serviceName, service
       addVolumeMapping serviceName, service
+      addDockerMapping serviceName, service
       migrateLinksToDependsOn serviceName, service
       migrateLogging serviceName, service
       restrictCompose serviceName, service
