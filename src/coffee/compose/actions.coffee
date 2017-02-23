@@ -30,6 +30,20 @@ module.exports = (config) ->
 
     emitLogCb = (data) -> eventEmitter.emit 'startup-log', data.toString()
 
+    volumePaths = []
+    for service in _.values composition.services when service.volumes
+      volumePaths = _.uniq (_.union volumePaths, service.volumes).map (mapping) ->
+        mapping.split(':')[0]
+
+    for path in volumePaths
+      try
+        process.umask 0
+        mkdirp.sync path
+        fs.chmodSync path, 0o777
+        console.log 'Created volume', path
+      catch err
+        console.log('Error while creating volume dir', err) unless err.code is 'EEXIST'
+
     ensureMkdir scriptDir, ->
       writeFile scriptPath, compose, ->
         runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
@@ -86,7 +100,7 @@ ensureMkdir = (scriptDir, success) ->
     unless not err or err.code is 'EEXIST'
       console.log 'Cannot make dir', scriptDir, err
     else
-      success()
+      success?()
 
 writeFile = (path, contents, success) ->
   fs.writeFile path, contents, (err) ->
