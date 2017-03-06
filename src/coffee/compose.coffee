@@ -2,10 +2,11 @@ _         = require 'lodash'
 path      = require 'path'
 resolvep  = require 'resolve-path'
 
+composeLib = require './compose/lib.coffee'
+
 module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
   networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
-  networkEnv = 'eth0_pipework_cmd'
 
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
@@ -21,6 +22,12 @@ module.exports = (config) ->
           network_mode: 'none'
           labels: labels
           stop_signal: 'SIGKILL'
+          healthcheck:
+            test: "ifconfig eth0 | grep 'inet addr:'"
+            interval: '1s'
+            timeout: '5s'
+            retries: 60
+
         if service.container_name
           netcontainer['container_name'] = "#{service.container_name}-net"
 
@@ -30,6 +37,11 @@ module.exports = (config) ->
         delete service.hostname
         delete service.net
         service.network_mode = "service:bb-net-#{serviceName}"
+
+        depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
+        depends_on["bb-net-#{serviceName}"] = condition: 'service_healthy'
+        service.depends_on = depends_on
+
       else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
     resolvePath = (root, path) ->
@@ -95,11 +107,11 @@ module.exports = (config) ->
         service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
 
     for serviceName, service of doc.services
+      migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
       addNetworkContainer serviceName, service
       addVolumeMapping serviceName, service
       addDockerMapping serviceName, service
-      migrateLinksToDependsOn serviceName, service
       migrateLogging serviceName, service
       restrictCompose serviceName, service
 
