@@ -2,13 +2,18 @@
 
 (enable-console-print!)
 
-(defn process-v1 [compose] {:version "2", :services compose})
+(defn v2dot1 [services] {:version "2.1", :services services})
 
-(defn process-v2 [compose] compose)
+(defn process-with-version [compose] (v2dot1 (services compose)))
+
+(defn services [compose]
+  (if-not (:services compose)
+    compose
+    (:services compose)))
 
 (defn process-compose [compose]
   (if-not (:version compose)
-    (process-v1 compose)
-    (process-v2 compose)))
+    (v2dot1 compose)
+    (process-with-version compose)))
 
 (defn ^:export mapv2 [x] (clj->js (process-compose (js->clj x :keywordize-keys true))))
