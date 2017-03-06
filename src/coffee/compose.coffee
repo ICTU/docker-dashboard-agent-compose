@@ -22,11 +22,7 @@ module.exports = (config) ->
           network_mode: 'none'
           labels: labels
           stop_signal: 'SIGKILL'
-          healthcheck:
-            test: "ifconfig eth0 | grep 'inet addr:'"
-            interval: '1s'
-            timeout: '5s'
-            retries: 60
+          healthcheck: config.net_container.healthcheck
 
         if service.container_name
           netcontainer['container_name'] = "#{service.container_name}-net"

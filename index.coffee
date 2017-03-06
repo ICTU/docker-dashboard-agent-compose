@@ -21,6 +21,12 @@ config =
     url: env.assert 'MQTT_URL'
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
+  net_container:
+    healthcheck:
+      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig eth0 | grep 'inet addr:'"
+      interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '15s'
+      timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
+      retries: env.get 'NETWORK_HEALTHCHECK_RETRIES', 60
 
 console.log 'Config \n\n', config, '\n\n'
 

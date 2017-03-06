@@ -6,6 +6,8 @@ module.exports.assert = (envName) ->
     process.exit(1)
   else env
 
+module.exports.get = (envName, deflt) -> process.env[envName] or deflt
+
 module.exports.assertVlan = (envName) ->
   envVlan = process.env[envName]
   unless not envVlan or isValidVlan(envVlan)
