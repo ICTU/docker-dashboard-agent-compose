@@ -19,8 +19,8 @@ config =
   remotefsUrl: env.assert 'REMOTEFS_URL'
   mqtt:
     url: env.assert 'MQTT_URL'
-    user: env.assert 'MQTT_USER'
-    pass: env.assert 'MQTT_PASS'
+    user: env.get 'MQTT_USER'
+    pass: env.get 'MQTT_PASS'
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   net_container:
