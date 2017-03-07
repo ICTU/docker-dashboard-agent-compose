@@ -1,6 +1,6 @@
 {
   "name": "docker-dashboard-agent-compose",
-  "version": "2.3.2",
+  "version": "2.4.0",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
-    "mqtt": "^1.14.1",
+    "mqtt": "^2.4.0",
     "path": "^0.12.7",
     "request": "^2.74.0",
     "resolve-path": "^1.3.3",

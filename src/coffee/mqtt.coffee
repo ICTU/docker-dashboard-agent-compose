@@ -1,7 +1,9 @@
 mqtt    = require 'mqtt'
 
 module.exports = (mqttConfig) ->
-  client = mqtt.connect mqttConfig.url
+  client = mqtt.connect mqttConfig.url,
+    username: mqttConfig.user
+    password: mqttConfig.pass
   client.on 'connect', ->
     console.log 'Connected to', mqttConfig.url
 
