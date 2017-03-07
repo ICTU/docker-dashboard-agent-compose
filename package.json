@@ -6,7 +6,9 @@
   "scripts": {
     "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
     "test": "mocha --compilers coffee:coffee-script/register ./**/*.test.coffee",
-    "watchTest": "mocha --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch ./**/*.test.coffee"
+    "watchTest": "mocha --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch ./**/*.test.coffee",
+    "precommit": "npm test",
+    "prepush": "npm test"
   },
   "author": "",
   "license": "Apache-2.0",
@@ -26,7 +28,7 @@
   },
   "devDependencies": {
     "coffee-script": "^1.12.4",
-    "mocha": "^3.2.0",
-    "shared-git-hooks": "^1.2.1"
+    "husky": "^0.13.2",
+    "mocha": "^3.2.0"
   }
 }
