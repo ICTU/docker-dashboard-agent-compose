@@ -28,7 +28,7 @@ config =
       test: env.get 'NETWORK_HEALTHCHECK_TEST', "if [ ! -f /tmp/healthcheck ]; then ifconfig eth0 | grep 'inet addr:'; [ $$? -eq 0 ] && touch /tmp/healthcheck; else sleep 30; ifconfig eth0 | grep 'inet addr:'; fi"
       interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '1s'
       timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '35s'
-      retries: env.get 'NETWORK_HEALTHCHECK_RETRIES', 5
+      retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 10)
 
 console.log 'Config \n\n', config, '\n\n'
 
