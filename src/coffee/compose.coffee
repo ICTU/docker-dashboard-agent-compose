@@ -6,7 +6,7 @@ composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
+  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ 0/0#{vlan}"
 
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
@@ -15,11 +15,12 @@ module.exports = (config) ->
           'bigboat.service.type': 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
         netcontainer =
-          image: 'ictu/pipes'
+          image: 'ictu/pipes:dhcpcd'
           environment: eth0_pipework_cmd: networkValue
           hostname: "#{serviceName}.#{subDomain}"
           dns_search: subDomain
           network_mode: 'none'
+          cap_add: ["NET_ADMIN"]
           labels: labels
           stop_signal: 'SIGKILL'
           healthcheck: config.net_container.healthcheck
@@ -80,7 +81,11 @@ module.exports = (config) ->
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
-        service.depends_on = (_.union (service.depends_on or []), service.links).map (s) -> s.split(':')[0]
+        links = (service.links.map (l) -> l.split(':')[0])
+        deps = composeLib.transformDependsOnToObject service.depends_on
+        for l in links
+          deps[l] = condition: 'service_started' unless deps[l]
+        service.depends_on = deps
         delete service.links
 
     migrateLogging = (serviceName, service) ->
