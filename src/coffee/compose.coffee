@@ -82,7 +82,7 @@ module.exports = (config) ->
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
         links = (service.links.map (l) -> l.split(':')[0])
-        deps = composeLib.transformDependsOnToObject service.depends_on
+        deps = composeLib.transformDependsOnToObject(service.depends_on) or {}
         for l in links
           deps[l] = condition: 'service_started' unless deps[l]
         service.depends_on = deps
