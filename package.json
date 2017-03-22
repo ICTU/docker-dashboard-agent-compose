@@ -1,6 +1,6 @@
 {
   "name": "docker-dashboard-agent-compose",
-  "version": "2.5.3",
+  "version": "2.5.4",
   "description": "",
   "main": "index.js",
   "scripts": {
