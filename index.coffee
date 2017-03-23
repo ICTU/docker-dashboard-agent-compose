@@ -10,6 +10,9 @@ Mqtt          = require './src/coffee/mqtt'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
+NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
+NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
+
 config =
   vlan: env.assertVlan 'VLAN'
   domain: env.assert 'DOMAIN'
@@ -25,7 +28,7 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   net_container:
     healthcheck:
-      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig eth0 | grep 'inet addr:10.25'"
+      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep 'inet addr:#{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}'"
       interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
       timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
       retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 4)
