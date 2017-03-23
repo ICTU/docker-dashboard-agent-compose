@@ -3,7 +3,11 @@ spawn  = require('child_process').spawn
 yaml   = require 'js-yaml'
 fs     = require 'fs'
 mkdirp = require 'mkdirp'
+shell  = require 'shelljs'
 _      = require 'lodash'
+
+shell.config.verbose = false
+shell.config.silent = true
 
 module.exports = (config) ->
 
@@ -11,6 +15,19 @@ module.exports = (config) ->
     [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
   composeProject = (instance) -> "#{config.domain}-#{instance}"
+
+  saveScript = (filename, instance, scriptData, cb) ->
+    [scriptDir] = buildScriptPaths instance
+    scriptPath = "#{scriptDir}/#{filename}"
+    ensureMkdir scriptDir, -> writeFile scriptPath, scriptData, cb
+    scriptPath
+
+  config: (instance, compose, cb) ->
+    saveScript 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath)->
+      res = shell.exec("docker-compose --file #{filePath} config")
+      if res.code is 0
+        cb null, yaml.safeLoad res.stdout
+      else cb res.stderr
 
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
@@ -105,4 +122,4 @@ ensureMkdir = (scriptDir, success) ->
 writeFile = (path, contents, success) ->
   fs.writeFile path, contents, (err) ->
     if err then console.error 'Error writing file', err
-    else success()
+    else success null, path

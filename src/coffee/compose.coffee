@@ -116,8 +116,8 @@ module.exports = (config) ->
       migrateLogging serviceName, service
       restrictCompose serviceName, service
 
+    doc.version = '2.1'
+
     delete doc.volumes
     delete doc.networks
-
-
     doc

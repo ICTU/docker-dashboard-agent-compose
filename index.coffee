@@ -50,19 +50,25 @@ agent = server.agent name: packageJson.name , version: packageJson.version
 agent.on 'start', (data) ->
   instanceName = data.instance.name
   options = data.instance.options
-  composev2 = global.compose.compose.mapv2 data.app.definition
-  composition = libcompose.augmentCompose instanceName, options, composev2
 
-  start = compose.start instanceName, composition, data
-  start.on 'pulling', (event) ->
-    event.instance = instanceName
-    mqtt.publish '/agent/docker/pulling', event
-  start.on 'startup-log', (logData) ->
-    event =
-      instance: instanceName
-      data: logData
-    mqtt.publish '/agent/docker/log/startup', event
+  compose.config instanceName, data.app.definition, (err, composev2) ->
+    if err
+      mqtt.publish '/agent/docker/log/startup/error',
+        instance: instanceName
+        data: err
+    else
+      console.log 'composev2', composev2
+      composition = libcompose.augmentCompose instanceName, options, composev2
 
+      start = compose.start instanceName, composition, data
+      start.on 'pulling', (event) ->
+        event.instance = instanceName
+        mqtt.publish '/agent/docker/pulling', event
+      start.on 'startup-log', (logData) ->
+        event =
+          instance: instanceName
+          data: logData
+        mqtt.publish '/agent/docker/log/startup', event
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name
