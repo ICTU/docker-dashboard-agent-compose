@@ -25,10 +25,10 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   net_container:
     healthcheck:
-      test: env.get 'NETWORK_HEALTHCHECK_TEST', "if [ ! -f /tmp/healthcheck ]; then ifconfig eth0 | grep 'inet addr:10.25'; [ $$? -eq 0 ] && touch /tmp/healthcheck; else sleep 30; ifconfig eth0 | grep 'inet addr:10.25'; fi"
-      interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '1s'
-      timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '35s'
-      retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 10)
+      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig eth0 | grep 'inet addr:10.25'"
+      interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
+      timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
+      retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 4)
 
 console.log 'Config \n\n', config, '\n\n'
 
