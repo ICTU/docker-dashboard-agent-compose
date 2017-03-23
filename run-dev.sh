@@ -1,7 +1,5 @@
 #!/bin/bash
 
-docker run --rm -v $PWD:/build -w /build clojure:lein-2.7.1-alpine lein cljsbuild once nodejs
-
 DOCKER_HOST=tcp://10.19.88.248:2375 \
 AUTH_TOKEN=innovation \
 HTTP_PORT=8080 \
