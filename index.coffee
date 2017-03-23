@@ -1,8 +1,3 @@
-require("./target/goog/bootstrap/nodejs");
-require("./target/cljs/core")
-require('./target/compose/compose')
-goog.require("compose.compose")
-
 fs            = require 'fs-extra'
 path          = require 'path'
 server        = require 'docker-dashboard-agent-api'
