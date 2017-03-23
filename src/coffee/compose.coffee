@@ -15,7 +15,7 @@ module.exports = (config) ->
           'bigboat.service.type': 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
         netcontainer =
-          image: 'ictu/pipes:dhcpcd'
+          image: 'ictu/pipes'
           environment: eth0_pipework_cmd: networkValue
           hostname: "#{serviceName}.#{subDomain}"
           dns_search: subDomain
