@@ -6,7 +6,7 @@ composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ 0/0#{vlan}"
+  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
 
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
@@ -15,7 +15,7 @@ module.exports = (config) ->
           'bigboat.service.type': 'net'
         subDomain = "#{instance}.#{config.domain}.#{config.tld}"
         netcontainer =
-          image: 'ictu/pipes:2'
+          image: 'ictu/pipes:1'
           environment: eth0_pipework_cmd: networkValue
           hostname: "#{serviceName}.#{subDomain}"
           dns_search: subDomain
