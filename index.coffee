@@ -23,7 +23,7 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   net_container:
     healthcheck:
-      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep 'inet addr:#{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}'"
+      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
       interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
       timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
       retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 4)
