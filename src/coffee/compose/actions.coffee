@@ -22,9 +22,10 @@ module.exports = (config) ->
     ensureMkdir scriptDir, -> writeFile scriptPath, scriptData, cb
     scriptPath
 
-  config: (instance, compose, cb) ->
-    saveScript 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath)->
-      res = shell.exec("docker-compose --file #{filePath} config")
+  config: (instance, compose, data, cb) ->
+    saveScript 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath) ->
+      env = buildEnv config, data
+      res = shell.exec("docker-compose --file #{filePath} config", env: env)
       if res.code is 0
         cb null, yaml.safeLoad res.stdout
       else cb res.stderr
