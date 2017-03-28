@@ -1,5 +1,5 @@
 assert  = require 'assert'
-{transformDependsOnToObject}     = require './lib.coffee'
+{transformDependsOnToObject}     = require '../../../src/coffee/compose/lib.coffee'
 
 describe 'Compose lib', ->
   describe 'transformDependsOnToObject', ->
