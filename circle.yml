@@ -4,11 +4,11 @@ machine:
 
 dependencies:
   override:
-    - docker run -v $PWD:/build -w /build clojure:lein-2.7.1-alpine lein cljsbuild once nodejs
     - docker build -t ictu/bigboat-agent-compose:latest .
+
 test:
   override:
-    - echo "no tests!"
+    - docker run --rm -v $PWD:/src -w /src node:7 sh -c 'npm install; npm test'
 
 deployment:
   hub:
