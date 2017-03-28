@@ -1,5 +1,5 @@
 node_modules
-
+coverage
 pom.xml
 *jar
 /lib/
