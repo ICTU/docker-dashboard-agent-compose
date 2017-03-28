@@ -10,12 +10,15 @@ module.exports._assert = _assert = (process, console, envName) ->
 
 module.exports.get = (envName, deflt) -> process.env[envName] or deflt
 
-module.exports.assertVlan = (envName) ->
+module.exports.assertVlan = (envName) -> _assertVlan process, console, envName
+
+module.exports._assertVlan = _assertVlan = (process, console, envName) ->
   envVlan = process.env[envName]
   unless not envVlan or isValidVlan(envVlan)
     console.error "Error: Environment variable '#{envName}' should be a number between 1 and 4095 or not set at all"
     process.exit(1)
-  else envVlan
+  else
+    envVlan
 
 isValidVlan = (envVlan) ->
   if envVlan.match /^(409[0-5]|40[0-8][0-9]|[0-3][0-9][0-9][0-9]|[0-9][0-9][0-9]|[0-9][0-9]|[1-9])$/
