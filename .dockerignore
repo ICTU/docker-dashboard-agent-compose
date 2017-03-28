@@ -1,14 +1,4 @@
 .git
 node_modules
+tests
 npm-debug.log
-
-scripts/
-pom.xml
-*jar
-/lib/
-/classes/
-/release/
-.lein-deps-sum
-.lein-repl-history
-.lein-plugins/
-.repl*
