@@ -10,7 +10,7 @@ test:
   override:
     - docker run --rm -v $PWD:/src -w /src node:7 sh -c 'npm install; npm test'
   post:
-    - cp ./coverage/ $CIRCLE_ARTIFACTS
+    - cp -r ./coverage/ $CIRCLE_ARTIFACTS
 
 deployment:
   hub:
