@@ -5,8 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
-    "test": "mocha --compilers coffee:coffee-script/register ./**/*.test.coffee",
-    "watchTest": "mocha --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch ./**/*.test.coffee",
+    "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
+    "watchTest": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
@@ -28,8 +28,11 @@
     "ws": "^1.1.1"
   },
   "devDependencies": {
+    "coffee-coverage": "^2.0.1",
     "coffee-script": "^1.12.4",
     "husky": "^0.13.2",
-    "mocha": "^3.2.0"
+    "istanbul": "^0.4.5",
+    "mocha": "^3.2.0",
+    "testdouble": "^2.1.0"
   }
 }
