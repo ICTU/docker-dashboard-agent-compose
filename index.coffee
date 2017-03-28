@@ -39,7 +39,7 @@ catch err
 
 libcompose = (require './src/coffee/compose') config
 
-mqtt = new Mqtt config.mqtt
+mqtt = Mqtt.connect config.mqtt
 
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}

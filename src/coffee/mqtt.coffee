@@ -1,14 +1,17 @@
 mqtt    = require 'mqtt'
 
-module.exports = (mqttConfig) ->
-  client = mqtt.connect mqttConfig.url,
-    username: mqttConfig.user
-    password: mqttConfig.pass
-  client.on 'connect', ->
-    console.log 'Connected to', mqttConfig.url
+module.exports =
+  connect: (mqttConfig) -> _connect mqttConfig, console
+  _connect: _connect = (mqttConfig, console) ->
+    client = mqtt.connect mqttConfig.url,
+      username: mqttConfig.user
+      password: mqttConfig.pass
 
-  client.on 'error', (err) -> console.log 'An error occured', err
-  client.on 'close', -> console.log 'Connection closed'
+    client.on 'connect', ->
+      console.log 'Connected to', mqttConfig.url
 
-  publish: (topic, data) ->
-    client.publish topic, JSON.stringify data
+    client.on 'error', (err) -> console.log 'An error occured', err
+    client.on 'close', -> console.log 'Connection closed'
+
+    publish: (topic, data) ->
+      client.publish topic, JSON.stringify data
