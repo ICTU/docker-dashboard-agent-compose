@@ -23,7 +23,8 @@ module.exports = (config) ->
           cap_add: ["NET_ADMIN"]
           labels: labels
           stop_signal: 'SIGKILL'
-          healthcheck: config.net_container.healthcheck
+        if config.net_container?.healthcheck
+          netcontainer.healthcheck = config.net_container.healthcheck
 
         if service.container_name
           netcontainer['container_name'] = "#{service.container_name}-net"
@@ -36,7 +37,10 @@ module.exports = (config) ->
         service.network_mode = "service:bb-net-#{serviceName}"
 
         depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
-        depends_on["bb-net-#{serviceName}"] = condition: 'service_healthy'
+        depends_on["bb-net-#{serviceName}"] = if netcontainer.healthcheck
+          condition: 'service_healthy'
+        else
+          condition: 'service_started'
         service.depends_on = depends_on
 
       else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"

@@ -5,6 +5,7 @@ Mqtt          = require './src/coffee/mqtt'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
+ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
@@ -21,7 +22,9 @@ config =
     pass: env.get 'MQTT_PASS'
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
-  net_container:
+
+if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
+  config.net_container =
     healthcheck:
       test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
       interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
