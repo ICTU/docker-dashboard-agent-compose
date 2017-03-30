@@ -20,6 +20,50 @@ module.exports = (config) ->
     delete service.privileged
     delete service.tmpfs
 
+  _migrateLinksToDependsOn: migrateLinksToDependsOn = (serviceName, service) ->
+    if service.links
+      links = (service.links.map (l) -> l.split(':')[0])
+      deps = composeLib.transformDependsOnToObject(service.depends_on) or {}
+      for l in links
+        deps[l] = condition: 'service_started' unless deps[l]
+      service.depends_on = deps
+      delete service.links
+
+  _resolvePath: resolvePath = (root, path) ->
+    path = path[1...] if path[0] is '/'
+    resolvep root, path
+
+  _addDockerMapping: addDockerMapping = (serviceName, service) ->
+    if service.labels?['bigboat.container.map_docker'] is 'true'
+      service.volumes = [] unless service.volumes
+      service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
+
+  _addExtraLabels: addExtraLabels = (serviceName, service) ->
+    service.labels = _.extend {}, service.labels,
+      'bigboat.domain': config.domain
+      'bigboat.tld': config.tld
+
+  _addVolumeMapping: addVolumeMapping = (serviceName, service, options) ->
+    bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
+    service.volumes = service.volumes?.map (v) ->
+      vsplit = v.split ':'
+      try
+        if vsplit.length is 2
+          if vsplit[1] in ['rw', 'ro']
+            v
+          else if bucketPath
+            "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}"
+          else vsplit[1]
+        else if vsplit.length is 3
+          if bucketPath
+            "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
+          else "#{vsplit[1]}:#{vsplit[2]}"
+        else v
+      catch e
+        console.error "Error while mapping volumes. Root: #{bucketPath}, path: #{v}", e
+        null
+    service.volumes = service.volumes.filter((s) -> s) if service.volumes
+
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
       if service.labels['bigboat.service.type'] in ['service', 'oneoff']
@@ -57,67 +101,12 @@ module.exports = (config) ->
 
       else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
-    resolvePath = (root, path) ->
-      path = path[1...] if path[0] is '/'
-      resolvep root, path
-
-    addVolumeMapping = (serviceName, service) ->
-      bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
-      service.volumes = service.volumes?.map (v) ->
-        vsplit = v.split ':'
-        try
-          if vsplit.length is 2
-            if vsplit[1] in ['rw', 'ro']
-              v
-            else if bucketPath
-              "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}"
-            else vsplit[1]
-          else if vsplit.length is 3
-            if bucketPath
-              "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
-            else "#{vsplit[1]}"
-          else v
-        catch e
-          console.error "Error while mapping volumes. Root: #{bucketPath}, path: #{v}", e
-          null
-      delete service.volumes unless service.volumes
-      service.volumes = service.volumes.filter((s) -> s) if service.volumes
-
-    migrateLinksToDependsOn = (serviceName, service) ->
-      if service.links
-        links = (service.links.map (l) -> l.split(':')[0])
-        deps = composeLib.transformDependsOnToObject(service.depends_on) or {}
-        for l in links
-          deps[l] = condition: 'service_started' unless deps[l]
-        service.depends_on = deps
-        delete service.links
-
-    migrateLogging = (serviceName, service) ->
-       # if log_driver is set, that means we are in a compose v1 and logging is not present, no need to merge
-      if service.log_driver
-        service.logging =
-          driver: service.log_driver
-        service.logging.options = service.log_opt if service.log_opt
-        delete service.log_driver
-        delete service.log_opt
-
-    addExtraLabels = (serviceName, service) ->
-      service.labels = _.extend {}, service.labels,
-        'bigboat.domain': config.domain
-        'bigboat.tld': config.tld
-
-    addDockerMapping = (serviceName, service) ->
-      if service.labels['bigboat.container.map_docker'] is 'true'
-        service.volumes = [] unless service.volumes
-        service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
-
     for serviceName, service of doc.services
       migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
       addNetworkContainer serviceName, service
-      addVolumeMapping serviceName, service
+      addVolumeMapping serviceName, service, options
       addDockerMapping serviceName, service
-      migrateLogging serviceName, service
       restrictCompose serviceName, service
 
     doc.version = '2.1'
