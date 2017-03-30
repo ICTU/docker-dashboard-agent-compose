@@ -8,6 +8,18 @@ module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
   networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
 
+  _restrictCompose: restrictCompose = (serviceName, service) ->
+    delete service.cap_add
+    delete service.cap_drop
+    delete service.cgroup_parent
+    delete service.devices
+    delete service.dns
+    delete service.dns_search
+    delete service.networks
+    delete service.ports
+    delete service.privileged
+    delete service.tmpfs
+
   augmentCompose: (instance, options, doc) ->
     addNetworkContainer = (serviceName, service) ->
       if service.labels['bigboat.service.type'] in ['service', 'oneoff']
@@ -70,18 +82,6 @@ module.exports = (config) ->
           null
       delete service.volumes unless service.volumes
       service.volumes = service.volumes.filter((s) -> s) if service.volumes
-
-    restrictCompose = (serviceName, service) ->
-      delete service.cap_add
-      delete service.cap_drop
-      delete service.cgroup_parent
-      delete service.devices
-      delete service.dns
-      delete service.dns_search
-      delete service.networks
-      delete service.ports
-      delete service.privileged
-      delete service.tmpfs
 
     migrateLinksToDependsOn = (serviceName, service) ->
       if service.links
