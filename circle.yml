@@ -12,6 +12,7 @@ test:
   post:
     - cp -r ./coverage/ $CIRCLE_ARTIFACTS
     - bash <(curl -s https://codecov.io/bash)
+    - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v
 
 deployment:
   hub:
