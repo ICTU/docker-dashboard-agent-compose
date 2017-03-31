@@ -101,7 +101,6 @@ module.exports = (config) ->
     else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
   augmentCompose: (instance, options, doc) ->
-    console.log 'wiee!'
     for serviceName, service of doc.services
       migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
