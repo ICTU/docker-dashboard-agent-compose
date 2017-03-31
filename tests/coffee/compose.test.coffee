@@ -1,8 +1,23 @@
 assert  = require 'assert'
-td      = require 'testdouble'
 compose = require '../../src/coffee/compose.coffee'
 
 describe 'Compose', ->
+  describe 'augmentCompose', ->
+    it 'should set the compose version to 2.1', ->
+      doc = version: '1.0'
+      compose({}).augmentCompose '', {}, doc
+      assert.equal doc.version, '2.1'
+    it 'should delete the volumes section from the compose file', ->
+      doc = volumes: {}
+      assert.equal doc.volumes?, true
+      compose({}).augmentCompose '', {}, doc
+      assert.equal doc.volumes?, false
+    it 'should delete the networks section from the compose file', ->
+      doc = networks: {}
+      assert.equal doc.networks?, true
+      compose({}).augmentCompose '', {}, doc
+      assert.equal doc.networks?, false
+
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
       service =
@@ -19,22 +34,6 @@ describe 'Compose', ->
         this_is_not_dropped: 1
       compose({})._restrictCompose '', service
       assert.deepEqual service, this_is_not_dropped: 1
-
-  describe 'augmentCompose', ->
-    it 'should set the compose version to 2.1', ->
-      doc = version: '1.0'
-      compose({}).augmentCompose '', {}, doc
-      assert.equal doc.version, '2.1'
-    it 'should delete the volumes section from the compose file', ->
-      doc = volumes: {}
-      assert.equal doc.volumes?, true
-      compose({}).augmentCompose '', {}, doc
-      assert.equal doc.volumes?, false
-    it 'should delete the networks section from the compose file', ->
-      doc = networks: {}
-      assert.equal doc.networks?, true
-      compose({}).augmentCompose '', {}, doc
-      assert.equal doc.networks?, false
 
   describe '_migrateLinksToDependsOn', ->
     it 'should leaf the document untouched when there are no links', ->
@@ -132,3 +131,64 @@ describe 'Compose', ->
       service = volumes: ['../../my-malicious-volume/:/internal']
       c._addVolumeMapping '', service, storageBucket: 'bucket1'
       assert.deepEqual service, volumes: []
+
+  describe '_addNetworkContainer', ->
+    invokeTestSubject = (service, cfgNetContainer) ->
+      doc = services: {}
+      config = domain: 'google', tld: 'com', host_if: 'eth12', vlan: 1234, net_container: cfgNetContainer
+      compose(config)._addNetworkContainer 'service1', service, 'instance2', doc
+      doc
+    containerTest = (serviceType) ->
+      service =
+        labels:
+          'bigboat.service.type': serviceType
+      doc = invokeTestSubject service
+      assert.equal service.network_mode, 'service:bb-net-service1'
+      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
+      assert.deepEqual doc.services['bb-net-service1'],
+        image: 'ictu/pipes:1'
+        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234"
+        hostname: 'service1.instance2.google.com'
+        dns_search: 'instance2.google.com'
+        network_mode: 'none'
+        cap_add: ['NET_ADMIN']
+        labels: 'bigboat.service.type': 'net'
+        stop_signal: 'SIGKILL'
+    it 'should should add a network container for compose service of type \'service\'', ->
+      containerTest 'service'
+    it 'should should add a network container for compose service of type \'oneoff\'', ->
+      containerTest 'oneoff'
+    it 'should inherit all labels from the service container, except the bigboat.service.type label', ->
+      service =
+        labels:
+          'bigboat.service.type': 'service'
+          some_other_label: 'value'
+      doc  = invokeTestSubject service
+      assert.deepEqual doc.services['bb-net-service1'].labels,
+        'bigboat.service.type': 'net'
+        some_other_label: 'value'
+
+    it 'should set the netcontainer healthcheck when configured', ->
+      service =
+        labels:
+          'bigboat.service.type': 'service'
+      doc = invokeTestSubject service, healthcheck: 'some-check'
+      assert.equal doc.services['bb-net-service1'].healthcheck, 'some-check'
+      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_healthy'
+
+    it 'should use the container_name from the service, if any, to populate the netcontainer name', ->
+      service =
+        labels:
+          'bigboat.service.type': 'oneoff'
+        container_name: 'some-name'
+      doc = invokeTestSubject service
+      assert.equal doc.services['bb-net-service1'].container_name, 'some-name-net'
+
+    it 'should simply change the network_mode to use an existing netcontainer when the service type is anything other than service or oneoff', ->
+      service =
+        labels:
+          'bigboat.service.type': 'something-else'
+          'bigboat.service.name': 'myservice'
+      doc = invokeTestSubject service
+      assert.equal service.network_mode, 'service:bb-net-myservice'
+      assert.deepEqual doc, services: {}

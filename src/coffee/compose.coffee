@@ -64,47 +64,48 @@ module.exports = (config) ->
         null
     service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
+  _addNetworkContainer: addNetworkContainer = (serviceName, service, instance, doc) ->
+    if service.labels['bigboat.service.type'] in ['service', 'oneoff']
+      labels = _.extend {}, service.labels,
+        'bigboat.service.type': 'net'
+      subDomain = "#{instance}.#{config.domain}.#{config.tld}"
+      netcontainer =
+        image: 'ictu/pipes:1'
+        environment: eth0_pipework_cmd: networkValue
+        hostname: "#{serviceName}.#{subDomain}"
+        dns_search: subDomain
+        network_mode: 'none'
+        cap_add: ["NET_ADMIN"]
+        labels: labels
+        stop_signal: 'SIGKILL'
+      if config.net_container?.healthcheck
+        netcontainer.healthcheck = config.net_container.healthcheck
+
+      if service.container_name
+        netcontainer['container_name'] = "#{service.container_name}-net"
+
+      doc.services["bb-net-#{serviceName}"] = netcontainer
+      # remove the hostname if set in the service, the hostname is set from
+      # the network container
+      delete service.hostname
+      delete service.net
+      service.network_mode = "service:bb-net-#{serviceName}"
+
+      depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
+      depends_on["bb-net-#{serviceName}"] = if netcontainer.healthcheck
+        condition: 'service_healthy'
+      else
+        condition: 'service_started'
+      service.depends_on = depends_on
+
+    else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
+
   augmentCompose: (instance, options, doc) ->
-    addNetworkContainer = (serviceName, service) ->
-      if service.labels['bigboat.service.type'] in ['service', 'oneoff']
-        labels = _.extend {}, service.labels,
-          'bigboat.service.type': 'net'
-        subDomain = "#{instance}.#{config.domain}.#{config.tld}"
-        netcontainer =
-          image: 'ictu/pipes:1'
-          environment: eth0_pipework_cmd: networkValue
-          hostname: "#{serviceName}.#{subDomain}"
-          dns_search: subDomain
-          network_mode: 'none'
-          cap_add: ["NET_ADMIN"]
-          labels: labels
-          stop_signal: 'SIGKILL'
-        if config.net_container?.healthcheck
-          netcontainer.healthcheck = config.net_container.healthcheck
-
-        if service.container_name
-          netcontainer['container_name'] = "#{service.container_name}-net"
-
-        doc.services["bb-net-#{serviceName}"] = netcontainer
-        # remove the hostname if set in the service, the hostname is set from
-        # the network container
-        delete service.hostname
-        delete service.net
-        service.network_mode = "service:bb-net-#{serviceName}"
-
-        depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
-        depends_on["bb-net-#{serviceName}"] = if netcontainer.healthcheck
-          condition: 'service_healthy'
-        else
-          condition: 'service_started'
-        service.depends_on = depends_on
-
-      else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
-
+    console.log 'wiee!'
     for serviceName, service of doc.services
       migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
-      addNetworkContainer serviceName, service
+      addNetworkContainer serviceName, service, instance, doc
       addVolumeMapping serviceName, service, options
       addDockerMapping serviceName, service
       restrictCompose serviceName, service
