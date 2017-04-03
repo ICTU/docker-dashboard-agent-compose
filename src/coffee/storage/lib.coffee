@@ -3,6 +3,7 @@ path          = require 'path'
 request       = require 'request'
 
 module.exports =
+  runPeriodically: (f) -> setInterval f, 5000
   listStorageBuckets: (fs, dir, cb) ->
     fs.readdir dir, (err, dirList) ->
       if err

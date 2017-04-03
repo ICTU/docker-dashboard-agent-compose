@@ -12,6 +12,9 @@ config =
 client = null; myMqtt = null
 
 describe 'mqtt', ->
+
+  after -> td.reset()
+
   beforeEach ->
     client = td.object ['on', 'publish']
     td.when(realMqtt.connect('mqtt://host', {username: 'username', password: 'passwd123'})).thenReturn client

@@ -5,6 +5,9 @@ exec     = td.replace('child_process').exec
 lib      = require '../../../src/coffee/storage/lib.coffee'
 
 describe 'Storage/Lib', ->
+
+  after -> td.reset()
+
   describe 'listStorageBuckets', ->
     it 'should callback with an error when there was a problem listing files in the dir', ->
       fs = td.object ['readdir']

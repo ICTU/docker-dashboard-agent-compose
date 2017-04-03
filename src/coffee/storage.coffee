@@ -4,7 +4,7 @@ lib           = require './storage/lib.coffee'
 
 module.exports = (agent, mqtt, config) ->
 
-  setInterval lib.publishDataStoreUsage(mqtt, config.dataDir), 5000
+  lib.runPeriodically lib.publishDataStoreUsage(mqtt, config.dataDir)
 
   publishStorageBuckets = (err, buckets) ->
     mqtt.publish '/agent/storage/buckets', buckets unless err
