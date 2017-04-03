@@ -29,8 +29,14 @@ describe 'Storage', ->
     mqtt = td.object ['publish']
     argIsFs = td.matchers.argThat (arg) -> arg is fs
     captor = td.matchers.captor()
-    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain'
+    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
     td.verify agent.on '/storage/delete', captor.capture()
+    captor.value {name:'name1'}, null, 'mycallback'
+    td.verify fs.writeFile '/rootDir/myDomain/.name1.delete.lock', td.matchers.anything(), captor.capture()
+    captor.value()
+    td.verify storageLib.remoteFs 'remotefsUrl', 'rm', {dir: '/myDomain/name1'}, captor.capture()
+    captor.value()
+    td.verify fs.unlink '/rootDir/myDomain/.name1.delete.lock', 'mycallback'
 
   it 'should periodically publish data storage statistics to mqtt', ->
     agent = td.object ['on']
