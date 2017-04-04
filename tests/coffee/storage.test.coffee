@@ -26,10 +26,8 @@ describe 'Storage', ->
 
   it 'should delete a storage bucket when /storage/delete is invoked', ->
     agent = td.object ['on']
-    mqtt = td.object ['publish']
-    argIsFs = td.matchers.argThat (arg) -> arg is fs
     captor = td.matchers.captor()
-    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
     td.verify agent.on '/storage/delete', captor.capture()
     captor.value {name:'name1'}, null, 'mycallback'
     td.verify fs.writeFile '/rootDir/myDomain/.name1.delete.lock', td.matchers.anything(), captor.capture()
@@ -37,6 +35,27 @@ describe 'Storage', ->
     td.verify storageLib.remoteFs 'remotefsUrl', 'rm', {dir: '/myDomain/name1'}, captor.capture()
     captor.value()
     td.verify fs.unlink '/rootDir/myDomain/.name1.delete.lock', 'mycallback'
+
+  it 'should create a new storage bucket when /storage/create is invoked', ->
+    agent = td.object ['on']
+    captor = td.matchers.captor()
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    td.verify agent.on '/storage/create', captor.capture()
+    captor.value null, {name: 'bucket1'}, 'mycallback'
+    td.verify fs.mkdirs '/rootDir/myDomain/bucket1', 'mycallback'
+
+  it 'should create new storage bucket by copying an existing bucket when /storage/create with source parameter is invoked', ->
+    agent = td.object ['on']
+    captor = td.matchers.captor()
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    td.verify agent.on '/storage/create', captor.capture()
+    captor.value null, {name: 'bucket1', source: 'src1'}, 'mycallback'
+    td.verify fs.writeFile '/rootDir/myDomain/.bucket1.copy.lock', td.matchers.anything(), captor.capture()
+    captor.value()
+    td.verify storageLib.remoteFs 'remotefsUrl', 'cp', {source: '/myDomain/src1', destination: '/myDomain/bucket1'}, captor.capture()
+    captor.value()
+    td.verify fs.unlink '/rootDir/myDomain/.bucket1.copy.lock', 'mycallback'
+
 
   it 'should periodically publish data storage statistics to mqtt', ->
     agent = td.object ['on']
