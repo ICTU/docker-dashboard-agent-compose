@@ -55,10 +55,10 @@ module.exports = (config) ->
       catch err
         console.log('Error while creating volume dir', err) unless err.code is 'EEXIST'
 
-    ensureMkdir scriptDir, ->
-      writeFile scriptPath, compose, ->
-        runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
-          runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+    lib.ensureMkdir scriptDir, ->
+      lib.writeFile scriptPath, compose, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
+          lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], env, {stderr: emitLogCb}, ->
             console.log 'Done, started', composeProjectName
     eventEmitter
 
@@ -73,13 +73,13 @@ module.exports = (config) ->
       emitCbCalled = true
       eventEmitter.emit 'teardown-log', data.toString()
 
-    runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+    lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
       if emitCbCalled
         console.log 'Done, stopped', composeProjectName
       else
         # TODO: this fallback mechanism should be removed in future versions (e.g. v + 10), current(v)=2.0.1
         console.log "#{composeProjectName} did not stop, falling back on old stop behavior based on instance name only"
-        runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
           console.log 'Done, stopped', composeProjectName
 
     eventEmitter
@@ -95,25 +95,3 @@ buildEnv = (cfg, instanceCfg) ->
   BIGBOAT_APPLICATION_NAME: instanceCfg.app.name
   BIGBOAT_APPLICATION_VERSION: instanceCfg.app.version
   BIGBOAT_INSTANCE_NAME: instanceCfg.instance.name
-
-runCmd = (cmd, args, env, callbacks, exitCb) ->
-  spawned = spawn cmd, args, env: (_.extend {}, process.env, env)
-  if spawned.error
-    console.error "Error, unable to execute", cmd, args, pull.error
-  else
-    console.log 'success', cmd, args
-    spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
-    spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
-    spawned.on 'close', exitCb
-
-ensureMkdir = (scriptDir, success) ->
-  mkdirp scriptDir, (err) ->
-    unless not err or err.code is 'EEXIST'
-      console.log 'Cannot make dir', scriptDir, err
-    else
-      success?()
-
-writeFile = (path, contents, success) ->
-  fs.writeFile path, contents, (err) ->
-    if err then console.error 'Error writing file', err
-    else success null, path
