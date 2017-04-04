@@ -12,3 +12,12 @@ module.exports =
         _.zipObject depends_on, depends_on.map -> condition: condition
       else depends_on
     else null
+
+  saveScript: (config, filename, instance, scriptData, cb) ->
+    [scriptDir] = buildScriptPaths config, instance
+    scriptPath = "#{scriptDir}/#{filename}"
+    ensureMkdir scriptDir, -> writeFile scriptPath, scriptData, cb
+    scriptPath
+
+  buildScriptPaths: buildScriptPaths = (config, instance) ->
+    [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]

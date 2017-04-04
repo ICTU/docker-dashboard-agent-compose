@@ -6,24 +6,17 @@ mkdirp = require 'mkdirp'
 shell  = require 'shelljs'
 _      = require 'lodash'
 
+lib    = require './lib.coffee'
+
 shell.config.verbose = false
 shell.config.silent = true
 
 module.exports = (config) ->
 
-  buildScriptPaths = (instance) ->
-    [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
-
   composeProject = (instance) -> "#{config.domain}-#{instance}"
 
-  saveScript = (filename, instance, scriptData, cb) ->
-    [scriptDir] = buildScriptPaths instance
-    scriptPath = "#{scriptDir}/#{filename}"
-    ensureMkdir scriptDir, -> writeFile scriptPath, scriptData, cb
-    scriptPath
-
   config: (instance, compose, data, cb) ->
-    saveScript 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath) ->
+    lib.saveScript config, 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath) ->
       env = buildEnv config, data
       res = shell.exec("docker-compose --file #{filePath} config", env: env)
       if res.code is 0
@@ -33,7 +26,7 @@ module.exports = (config) ->
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
     compose = yaml.safeDump composition
-    [scriptDir, scriptPath] = buildScriptPaths instance
+    [scriptDir, scriptPath] = lib.buildScriptPaths config, instance
     composeProjectName = composeProject instance
 
     pullCb = (data) ->
@@ -71,7 +64,7 @@ module.exports = (config) ->
 
   stop: (instance, data) ->
     eventEmitter = new events.EventEmitter()
-    [scriptDir, scriptPath] = buildScriptPaths instance
+    [scriptDir, scriptPath] = lib.buildScriptPaths config, instance
     composeProjectName = composeProject instance
 
     env = buildEnv config, data
