@@ -1,4 +1,5 @@
 _       = require 'lodash'
+spawn   = require('child_process').spawn
 mkdirp  = require 'mkdirp'
 fs      = require 'fs'
 
@@ -24,14 +25,14 @@ module.exports =
   buildScriptPaths: buildScriptPaths = (config, instance) ->
     [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
 
-  ensureMkdir: (scriptDir, success) ->
+  ensureMkdir: ensureMkdir = (scriptDir, success) ->
     mkdirp scriptDir, (err) ->
       unless not err or err.code is 'EEXIST'
         console.log 'Cannot make dir', scriptDir, err
       else
         success?()
 
-  writeFile: (path, contents, success) ->
+  writeFile: writeFile = (path, contents, success) ->
     fs.writeFile path, contents, (err) ->
       if err then console.error 'Error writing file', err
       else success null, path
