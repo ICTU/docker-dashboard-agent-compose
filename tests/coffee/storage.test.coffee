@@ -56,6 +56,20 @@ describe 'Storage', ->
     captor.value()
     td.verify fs.unlink '/rootDir/myDomain/.bucket1.copy.lock', 'mycallback'
 
+  it 'should report the size of a storage bucket when /storage/size is invoked', ->
+    agent = td.object ['on']
+    cb = td.function()
+    captor = td.matchers.captor()
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    td.verify agent.on '/storage/size', captor.capture()
+    captor.value {name: 'bucket1'}, null, cb
+    td.verify fs.writeFile '/rootDir/myDomain/.bucket1.size.lock', td.matchers.anything(), captor.capture()
+    captor.value()
+    td.verify storageLib.remoteFs 'remotefsUrl', 'du', {dir: '/myDomain/bucket1'}, captor.capture()
+    captor.value null, {size: 1234}
+    td.verify fs.unlink '/rootDir/myDomain/.bucket1.size.lock', captor.capture()
+    captor.value()
+    td.verify cb null, {name: 'bucket1', size: 1234}
 
   it 'should periodically publish data storage statistics to mqtt', ->
     agent = td.object ['on']
