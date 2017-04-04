@@ -62,6 +62,7 @@ module.exports = (config) ->
       catch e
         console.error "Error while mapping volumes. Root: #{bucketPath}, path: #{v}", e
         null
+    delete service.volumes unless service.volumes
     service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
   _addNetworkContainer: addNetworkContainer = (serviceName, service, instance, doc) ->

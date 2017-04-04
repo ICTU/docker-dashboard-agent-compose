@@ -131,6 +131,11 @@ describe 'Compose', ->
       service = volumes: ['../../my-malicious-volume/:/internal']
       c._addVolumeMapping '', service, storageBucket: 'bucket1'
       assert.deepEqual service, volumes: []
+    it 'should not create invalid volume section', ->
+      c = compose dataDir: '/local/data/', domain: 'google'
+      service = image: 'something'
+      c._addVolumeMapping '', service, {storageBucket: 'bucket1'}
+      assert.deepEqual service, image: 'something'
 
   describe '_addNetworkContainer', ->
     invokeTestSubject = (service, cfgNetContainer) ->
