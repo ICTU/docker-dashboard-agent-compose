@@ -65,6 +65,10 @@ module.exports = (config) ->
     delete service.volumes unless service.volumes
     service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
+  _addLocaltimeMapping: addLocaltimeMapping = (serviceName, service) ->
+    service.volumes = [] unless service.volumes
+    service.volumes.push "/etc/localtime:/etc/localtime:ro"
+
   _addNetworkContainer: addNetworkContainer = (serviceName, service, instance, doc) ->
     if service.labels['bigboat.service.type'] in ['service', 'oneoff']
       labels = _.extend {}, service.labels,
@@ -107,6 +111,7 @@ module.exports = (config) ->
       addExtraLabels serviceName, service
       addNetworkContainer serviceName, service, instance, doc
       addVolumeMapping serviceName, service, options
+      addLocaltimeMapping serviceName, service
       addDockerMapping serviceName, service
       restrictCompose serviceName, service
 

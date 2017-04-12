@@ -137,6 +137,18 @@ describe 'Compose', ->
       c._addVolumeMapping '', service, {storageBucket: 'bucket1'}
       assert.deepEqual service, image: 'something'
 
+  describe '_addLocaltimeMapping', ->
+    localtimeTest = (service) ->
+      c = compose dataDir: '/local/data/', domain: 'google'
+      c._addLocaltimeMapping '', service
+      expected = service.volumes or []
+      expected.push '/etc/localtime:/etc/localtime:ro'
+      assert.deepEqual service, volumes: expected
+    it 'should add /etc/localtime volume mapping when there are no volumes', ->
+      localtimeTest {}
+    it 'should add /etc/localtime volume mapping when there are other volumes', ->
+      localtimeTest volumes: ['volume1', '/mapped:/volume']
+
   describe '_addNetworkContainer', ->
     invokeTestSubject = (service, cfgNetContainer) ->
       doc = services: {}
