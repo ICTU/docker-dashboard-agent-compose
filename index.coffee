@@ -60,7 +60,6 @@ agent.on 'start', (data) ->
         instance: instanceName
         data: err
     else
-      console.log 'composev2', composev2
       composition = libcompose.augmentCompose instanceName, options, composev2
 
       start = compose.start instanceName, composition, data

@@ -24,8 +24,6 @@ module.exports = (config) ->
 
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
-    # console.log 'IEEE', composition.services['bb-ssh-www'].labels
-    console.log 'IEEE', composition
     compose = yaml.safeDump composition
     [scriptDir, scriptPath] = lib.buildScriptPaths config, instance
     composeProjectName = composeProject instance
