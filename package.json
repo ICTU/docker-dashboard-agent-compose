@@ -6,7 +6,7 @@
   "scripts": {
     "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
     "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
-    "watchTest": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
+    "test:watch": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
