@@ -22,6 +22,9 @@ config =
     pass: env.get 'MQTT_PASS'
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
+  network:
+    scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
+    scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
   config.net_container =
@@ -46,6 +49,10 @@ mqtt = Mqtt.connect config.mqtt
 
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
+
+unless config.network.scanEnabled is 'false'
+  publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
+  (require './src/js/network') config, publishNetworkInfo
 
 compose = require('./src/coffee/compose/actions') config
 
