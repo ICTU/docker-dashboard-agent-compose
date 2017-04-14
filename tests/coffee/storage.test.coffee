@@ -21,13 +21,13 @@ describe 'Storage', ->
     td.when(agent.on('/storage/list')).thenCallback 'params', 'data', cb
     argIsFs = td.matchers.argThat (arg) -> arg is fs
     td.when(storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain').thenCallback null, 'mybuckets'
-    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain'
+    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
     td.verify mqtt.publish '/agent/storage/buckets', 'mybuckets'
 
   it 'should delete a storage bucket when /storage/delete is invoked', ->
     agent = td.object ['on']
     captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/delete', captor.capture()
     captor.value {name:'name1'}, null, 'mycallback'
     td.verify fs.writeFile '/rootDir/myDomain/.name1.delete.lock', td.matchers.anything(), captor.capture()
@@ -39,7 +39,7 @@ describe 'Storage', ->
   it 'should create a new storage bucket when /storage/create is invoked', ->
     agent = td.object ['on']
     captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/create', captor.capture()
     captor.value null, {name: 'bucket1'}, 'mycallback'
     td.verify fs.mkdirs '/rootDir/myDomain/bucket1', 'mycallback'
@@ -47,7 +47,7 @@ describe 'Storage', ->
   it 'should create new storage bucket by copying an existing bucket when /storage/create with source parameter is invoked', ->
     agent = td.object ['on']
     captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/create', captor.capture()
     captor.value null, {name: 'bucket1', source: 'src1'}, 'mycallback'
     td.verify fs.writeFile '/rootDir/myDomain/.bucket1.copy.lock', td.matchers.anything(), captor.capture()
@@ -60,7 +60,7 @@ describe 'Storage', ->
     agent = td.object ['on']
     cb = td.function()
     captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/size', captor.capture()
     captor.value {name: 'bucket1'}, null, cb
     td.verify fs.writeFile '/rootDir/myDomain/.bucket1.size.lock', td.matchers.anything(), captor.capture()
@@ -73,7 +73,14 @@ describe 'Storage', ->
 
   it 'should periodically publish data storage statistics to mqtt', ->
     agent = td.object ['on']
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain'
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    td.verify storageLib.publishDataStoreUsage(null, '/agent/storage/size', '/rootDir')
+    td.verify storageLib.runPeriodically td.matchers.anything()
+
+  it 'should periodically publish docker graph statistics to mqtt', ->
+    agent = td.object ['on']
+    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    td.verify storageLib.publishDataStoreUsage(null, '/agent/docker/graph', '/docker/graph')
     td.verify storageLib.runPeriodically td.matchers.anything()
 
   it 'should watch for changes on the base path and publish storage buckets', ->
@@ -82,7 +89,7 @@ describe 'Storage', ->
     argIsFs = td.matchers.argThat (arg) -> arg is fs
     captor = td.matchers.captor()
 
-    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain'
+    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
     td.verify fs.watch '/rootDir/myDomain', captor.capture()
     captor.value()
     td.verify storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain', captor.capture()

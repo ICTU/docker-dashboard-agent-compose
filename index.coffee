@@ -20,6 +20,9 @@ config =
     url: env.assert 'MQTT_URL'
     user: env.get 'MQTT_USER'
     pass: env.get 'MQTT_PASS'
+  docker:
+    graph:
+      path: env.get 'DOCKER_GRAPH_PATH', '/var/lib/docker'
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
