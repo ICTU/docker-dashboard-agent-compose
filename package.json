@@ -21,6 +21,7 @@
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
     "mqtt": "^2.4.0",
+    "os-monitor": "^1.0.5",
     "path": "^0.12.7",
     "request": "^2.74.0",
     "resolve-path": "^1.3.3",

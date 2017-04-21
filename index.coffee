@@ -28,6 +28,9 @@ config =
   network:
     scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
+  dhcp:
+    scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
+    scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
   config.net_container =
@@ -56,6 +59,14 @@ publishState = (instance, state) ->
 unless config.network.scanEnabled is 'false'
   publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
   (require './src/js/network') config, publishNetworkInfo
+unless config.dhcp.scanEnabled is 'false'
+  publishDhcpInfo = (data) -> mqtt.publish '/dhcp/info', data
+  (require './src/js/dhcp') config, publishDhcpInfo
+
+publishSystemMem = (data) -> mqtt.publish '/system/memory', data
+publishSystemUptime = (data) -> mqtt.publish '/system/uptime', data
+publishSystemCpu = (data) -> mqtt.publish '/system/cpu', data
+require('./src/js/os-monitor')(publishSystemMem, publishSystemUptime, publishSystemCpu)
 
 compose = require('./src/coffee/compose/actions') config
 
