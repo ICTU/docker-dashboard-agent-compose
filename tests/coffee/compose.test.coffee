@@ -36,7 +36,7 @@ describe 'Compose', ->
       assert.deepEqual service, this_is_not_dropped: 1
 
   describe '_migrateLinksToDependsOn', ->
-    it 'should leaf the document untouched when there are no links', ->
+    it 'should leave the document untouched when there are no links', ->
       doc = services: www: image: 'someimage'
       compose({})._migrateLinksToDependsOn '', doc
       assert.deepEqual doc, services: www: image: 'someimage'
