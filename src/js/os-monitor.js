@@ -6,8 +6,6 @@ module.exports = (publishSystemMemInfo, publishSystemUptime, publishSystemCpu) =
   const cpus = monitor.os.cpus()
 
   monitor.on('monitor', (event) => {
-    console.log('monitor!', event);
-    console.log(monitor.os.cpus());
     publishSystemMemInfo({
       free: event.freemem,
       total: event.totalmem
