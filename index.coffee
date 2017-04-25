@@ -31,10 +31,13 @@ config =
   dhcp:
     scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
+  net_container:
+    startcheck: 
+      test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
+
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
-  config.net_container =
-    healthcheck:
+  config.net_container.healthcheck =
       test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
       interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
       timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
