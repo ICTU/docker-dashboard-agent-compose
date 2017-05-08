@@ -15,7 +15,7 @@ test:
     - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v
 
 deployment:
-  hub:
+  tags:
     tag: /^[0-9]+\.[0-9]+\.[0-9]+$/
     commands:
       - docker tag ictu/bigboat-agent-compose:latest ictu/bigboat-agent-compose:${CIRCLE_TAG}
@@ -31,3 +31,9 @@ deployment:
     commands:
       - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
       - docker push ictu/bigboat-agent-compose:latest
+  features:
+    branch: /^feature.*$/
+    commands:
+      - docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS
+      - docker tag ictu/bigboat-agent-compose:latest ictu/bigboat-agent-compose:${CIRCLE_BRANCH}
+      - docker push ictu/bigboat-agent-compose:${CIRCLE_BRANCH}
