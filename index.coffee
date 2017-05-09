@@ -32,7 +32,8 @@ config =
     scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
   net_container:
-    startcheck: 
+    version: env.get 'PIPES_VERSION', '1'
+    startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
 
 

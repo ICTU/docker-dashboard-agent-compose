@@ -159,7 +159,7 @@ describe 'Compose', ->
       service =
         labels:
           'bigboat.service.type': serviceType
-      doc = invokeTestSubject service
+      doc = invokeTestSubject service, version: '1'
       assert.equal service.network_mode, 'service:bb-net-service1'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
       assert.deepEqual doc.services['bb-net-service1'],
@@ -180,7 +180,7 @@ describe 'Compose', ->
         labels:
           'bigboat.service.type': 'service'
           some_other_label: 'value'
-      doc  = invokeTestSubject service
+      doc  = invokeTestSubject service, version: '1'
       assert.deepEqual doc.services['bb-net-service1'].labels,
         'bigboat.service.type': 'net'
         some_other_label: 'value'
@@ -189,7 +189,9 @@ describe 'Compose', ->
       service =
         labels:
           'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, healthcheck: 'some-check'
+      doc = invokeTestSubject service,
+        healthcheck: 'some-check'
+        version: '1'
       assert.equal doc.services['bb-net-service1'].healthcheck, 'some-check'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_healthy'
 
@@ -198,7 +200,7 @@ describe 'Compose', ->
         labels:
           'bigboat.service.type': 'oneoff'
         container_name: 'some-name'
-      doc = invokeTestSubject service
+      doc = invokeTestSubject service, version: '1'
       assert.equal doc.services['bb-net-service1'].container_name, 'some-name-net'
 
     it 'should simply change the network_mode to use an existing netcontainer when the service type is anything other than service or oneoff', ->
@@ -209,3 +211,8 @@ describe 'Compose', ->
       doc = invokeTestSubject service
       assert.equal service.network_mode, 'service:bb-net-myservice'
       assert.deepEqual doc, services: {}
+
+    it 'should use the provided network image version', ->
+      service = labels: 'bigboat.service.type': 'service'
+      doc = invokeTestSubject service, version: '2'
+      assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'
