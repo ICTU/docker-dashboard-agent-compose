@@ -76,7 +76,9 @@ module.exports = (config) ->
                 res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{netContainer} #{config.net_container.startcheck}"
                 if res.code is 1 then checkAgain = true
               if checkAgain
-                setTimeout checkNetworks, 5000 if tries <= 48 # we try for four minutes before giving up
+                if tries <= 48 # we try for four minutes before giving up
+                  setTimeout checkNetworks, 5000
+                else emitLogCb 'Failed to acquire IPs for all services...'
               else startComposeServices()
 
             emitLogCb 'Network started, waiting for IPs...\n'
