@@ -6,7 +6,7 @@ composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
   vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
+  networkValue = "#{config.host_if} #{config.net_container.pipeworksCmd}#{vlan}"
 
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add

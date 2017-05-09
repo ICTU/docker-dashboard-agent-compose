@@ -33,6 +33,7 @@ config =
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
   net_container:
     version: env.get 'PIPES_VERSION', '1'
+    pipeworksCmd: env.get 'PIPEWORKS_CMD', '-i eth0 @CONTAINER_NAME@ dhclient'
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
 
