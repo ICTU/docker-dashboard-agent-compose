@@ -5,8 +5,7 @@ resolvep  = require 'resolve-path'
 composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
-  vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} #{config.net_container.pipeworksCmd}#{vlan}"
+  networkValue = config.net_container.pipeworksCmd
 
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add

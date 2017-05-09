@@ -4,7 +4,7 @@ compose = require '../../src/coffee/compose.coffee'
 standardCfg =
   net_container:
     version: '1'
-    pipeworksCmd: '-i eth0 @CONTAINER_NAME@ dhclient'
+    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234'
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
@@ -160,8 +160,6 @@ describe 'Compose', ->
       config = Object.assign {}, standardCfg,
         domain: 'google'
         tld: 'com'
-        host_if: 'eth12'
-        vlan: 1234
         net_container: Object.assign {}, standardCfg.net_container, cfgNetContainer
       compose(config)._addNetworkContainer 'service1', service, 'instance2', doc
       doc

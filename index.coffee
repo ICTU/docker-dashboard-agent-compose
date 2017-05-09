@@ -9,12 +9,14 @@ ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
+pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ dhclient @3055'
+vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
+scanCmd = env.get "NETWORK_SCAN_CMD', 'nmap -sP -n 10.25.#{vlan}.51-240"
+
 config =
-  vlan: env.assertVlan 'VLAN'
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
-  host_if: env.assert 'HOST_IF'
   remotefsUrl: env.assert 'REMOTEFS_URL'
   mqtt:
     url: env.assert 'MQTT_URL'
@@ -26,6 +28,7 @@ config =
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
+    scanCmd: scanCmd
     scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
   dhcp:
@@ -33,7 +36,7 @@ config =
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
   net_container:
     version: env.get 'PIPES_VERSION', '1'
-    pipeworksCmd: env.get 'PIPEWORKS_CMD', '-i eth0 @CONTAINER_NAME@ dhclient'
+    pipeworksCmd: pipeworksCmd
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
 
