@@ -3,7 +3,7 @@ compose = require '../../src/coffee/compose.coffee'
 
 standardCfg =
   net_container:
-    version: '1'
+    image: 'ictu/pipes:1'
     pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234'
 
 describe 'Compose', ->
@@ -220,5 +220,5 @@ describe 'Compose', ->
 
     it 'should use the provided network image version', ->
       service = labels: 'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, version: '2'
+      doc = invokeTestSubject service, image: 'ictu/pipes:2'
       assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'
