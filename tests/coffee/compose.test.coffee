@@ -116,8 +116,8 @@ describe 'Compose', ->
       volumeTest '/my/mapping:/internal/volume:rw', '/local/data/google/bucket1/my/mapping:/internal/volume:rw'
     it 'should leave a :ro postfix intact', ->
       volumeTest '/my/mapping:/internal/volume:ro', '/local/data/google/bucket1/my/mapping:/internal/volume:ro'
-    it 'should leave a postfix intact when no storage bucket is given', ->
-      volumeTest '/my/mapping:/internal/volume:rw', '/internal/volume:rw', {}
+    it 'should remove the postfix when no storage bucket is given', ->
+      volumeTest '/my/mapping:/internal/volume:rw', '/internal/volume', {}
     it 'should not do anything to an unmapped volume', ->
       volumeTest '/internal/volume', '/internal/volume'
     it 'should not do anything to an unmapped volume when no data bucket is given', ->

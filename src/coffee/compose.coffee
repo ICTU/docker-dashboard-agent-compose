@@ -57,7 +57,7 @@ module.exports = (config) ->
         else if vsplit.length is 3
           if bucketPath
             "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}:#{vsplit[2]}"
-          else "#{vsplit[1]}:#{vsplit[2]}"
+          else "#{vsplit[1]}"
         else v
       catch e
         console.error "Error while mapping volumes. Root: #{bucketPath}, path: #{v}", e
