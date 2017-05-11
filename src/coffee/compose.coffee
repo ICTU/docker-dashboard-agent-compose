@@ -82,6 +82,7 @@ module.exports = (config) ->
         cap_add: ["NET_ADMIN"]
         labels: labels
         stop_signal: 'SIGKILL'
+        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
       if config.net_container?.healthcheck
         netcontainer.healthcheck = config.net_container.healthcheck
 
