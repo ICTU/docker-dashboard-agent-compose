@@ -116,16 +116,16 @@ describe 'Compose', ->
       volumeTest '/my/mapping:/internal/volume:rw', '/local/data/google/bucket1/my/mapping:/internal/volume:rw'
     it 'should leave a :ro postfix intact', ->
       volumeTest '/my/mapping:/internal/volume:ro', '/local/data/google/bucket1/my/mapping:/internal/volume:ro'
-    it 'should leave a postfix intact when no storage bucket is given', ->
-      volumeTest '/my/mapping:/internal/volume:rw', '/internal/volume:rw', {}
+    it 'should remove the postfix when no storage bucket is given (compose bug)', ->
+      volumeTest '/my/mapping:/internal/volume:rw', '/internal/volume', {}
     it 'should not do anything to an unmapped volume', ->
       volumeTest '/internal/volume', '/internal/volume'
     it 'should not do anything to an unmapped volume when no data bucket is given', ->
       volumeTest '/internal/volume', '/internal/volume', {}
-    it 'should not do anything to an unmapped volume with :ro when no data bucket is given', ->
-      volumeTest '/internal/volume:ro', '/internal/volume:ro', {}
-    it 'should not do anything to an unmapped volume with :rw', ->
-      volumeTest '/internal/volume:rw', '/internal/volume:rw'
+    it 'should remove a postfix (:ro) from an unmapped volume when no data bucket is given (compose bug)', ->
+      volumeTest '/internal/volume:ro', '/internal/volume', {}
+    it 'should remove a postfix (:rw) from an unmapped volume when no data bucket is given (compose bug)', ->
+      volumeTest '/internal/volume:rw', '/internal/volume'
     it 'should discard a volume with a mapping that resolves outside of the bucket root', ->
       c = compose dataDir: '/local/data/', domain: 'google'
       service = volumes: ['../../my-malicious-volume/:/internal']

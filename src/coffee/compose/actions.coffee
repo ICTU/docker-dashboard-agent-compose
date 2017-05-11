@@ -42,10 +42,12 @@ module.exports = (config) ->
 
     volumePaths = []
     for service in _.values composition.services when service.volumes
-      volumePaths = _.uniq (_.union volumePaths, service.volumes).map (mapping) ->
-        mapping.split(':')[0]
+      volumePaths = _.uniq (_.union volumePaths, service.volumes.map (mapping) ->
+        splits = mapping.split(':')
+        splits[0] if splits.length >= 2
+      )
 
-    for path in volumePaths
+    for path in volumePaths when path
       try
         process.umask 0
         mkdirp.sync path
