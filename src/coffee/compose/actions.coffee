@@ -42,9 +42,10 @@ module.exports = (config) ->
 
     volumePaths = []
     for service in _.values composition.services when service.volumes
-      volumePaths = _.uniq (_.union volumePaths, service.volumes).map (mapping) ->
+      volumePaths = _.uniq (_.union volumePaths, service.volumes.map (mapping) ->
         splits = mapping.split(':')
-        splits[0] if splits.length is 2
+        splits[0] if splits.length >= 2
+      )
 
     for path in volumePaths when path
       try
