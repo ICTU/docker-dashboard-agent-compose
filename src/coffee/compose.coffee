@@ -50,7 +50,7 @@ module.exports = (config) ->
       try
         if vsplit.length is 2
           if vsplit[1] in ['rw', 'ro']
-            v
+            vsplit[0]
           else if bucketPath
             "#{resolvePath bucketPath, vsplit[0]}:#{vsplit[1]}"
           else vsplit[1]
