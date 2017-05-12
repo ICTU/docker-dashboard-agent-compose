@@ -73,6 +73,8 @@ module.exports = (config) ->
     if service.labels['bigboat.service.type'] in ['service', 'oneoff']
       labels = _.extend {}, service.labels,
         'bigboat.service.type': 'net'
+        'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | 10.25'
+        'bigboat.startcheck.interval': '1000'
       subDomain = "#{instance}.#{config.domain}.#{config.tld}"
       netcontainer =
         image: 'ictu/pipes:1'

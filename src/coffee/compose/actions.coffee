@@ -5,7 +5,8 @@ mkdirp = require 'mkdirp'
 shell  = require 'shelljs'
 _      = require 'lodash'
 
-lib    = require './lib.coffee'
+lib       = require './lib.coffee'
+Scheduler = require './scheduler.coffee'
 
 shell.config.verbose = false
 shell.config.silent = true
@@ -56,35 +57,24 @@ module.exports = (config) ->
       catch err
         console.log('Error while creating volume dir', err) unless err.code is 'EEXIST'
 
-    netContainerNames = _.filter _.keys(composition.services), (serviceName) -> serviceName.match /^bb\-net/
-    serviceContainerNames = _.difference _.keys(composition.services), netContainerNames
-
     lib.ensureMkdir scriptDir, ->
       lib.writeFile scriptPath, compose, ->
         lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
-          args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], netContainerNames
-          lib.runCmd 'docker-compose', args, env, {stderr: emitLogCb}, ->
 
-            startComposeServices = ->
-              args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], serviceContainerNames
-              lib.runCmd 'docker-compose', args, env, {stderr: emitLogCb}, ->
-                console.log 'Done, started', composeProjectName
+          startComposeServices = (serviceNames, cb)->
+            args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], serviceNames
+            lib.runCmd 'docker-compose', args, env, {stderr: emitLogCb}, ->
+              console.log 'started', serviceNames
+              cb()
 
-            tries = 0
-            checkNetworks = ->
-              checkAgain = false
-              for netContainer in netContainerNames
-                tries = tries + 1
-                res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{netContainer} #{config.net_container.startcheck}"
-                if res.code is 1 then checkAgain = true
-              if checkAgain
-                if tries <= 48 # we try for four minutes before giving up
-                  setTimeout checkNetworks, 5000
-                else emitLogCb 'Failed to acquire IPs for all services...'
-              else startComposeServices()
+          runCmd = (service, cmd, cb)->
+            res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{service} #{cmd}"
+            cb res.code is 1
 
-            emitLogCb 'Network started, waiting for IPs...\n'
-            checkNetworks()
+          scheduler = Scheduler composition.services
+          scheduler.on 'startComposeServices', startComposeServices
+          scheduler.on 'runStartCheck', runCmd
+
     eventEmitter
 
   stop: (instance, data) ->
