@@ -42,15 +42,16 @@ module.exports = (services) ->
     setTimeout serviceRampUp, 0
 
   runStartCheck = (service, condition, interval) ->
-    handle = setInterval ->
+    f = ->
+      console.log 'runStartCheck', service, interval, condition
       eventEmitter.emit 'runStartCheck', service, condition, (err) ->
         if err
           console.log 'start check failed', service, condition
+          setTimeout f, parseInt interval
         else
           console.log 'start check succeeded', service, condition
-          clearInterval handle
           serviceStarted service
-    , parseInt interval
+    setTimeout f, parseInt interval
 
   scheduleStartCheck = (service) ->
     if condition = services[service].labels['bigboat.startcheck.condition']
