@@ -3,8 +3,8 @@ compose = require '../../src/coffee/compose.coffee'
 
 standardCfg =
   net_container:
-    image: 'ictu/pipes:1'
-    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234'
+    image: 'ictu/pipes:2'
+    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234'
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
@@ -171,8 +171,8 @@ describe 'Compose', ->
       assert.equal service.network_mode, 'service:bb-net-service1'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
       assert.deepEqual doc.services['bb-net-service1'],
-        image: 'ictu/pipes:1'
-        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234"
+        image: 'ictu/pipes:2'
+        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234"
         hostname: 'service1.instance2.google.com'
         dns_search: 'instance2.google.com'
         network_mode: 'none'

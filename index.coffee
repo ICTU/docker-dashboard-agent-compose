@@ -9,7 +9,7 @@ ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
-pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ dhclient @3055'
+pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ 0/0 @3055'
 vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
 scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.#{vlan}.51-240"
 
@@ -35,7 +35,7 @@ config =
     scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
   net_container:
-    image: env.get 'NETWORK_IMAGE', 'ictu/pipes:1'
+    image: env.get 'NETWORK_IMAGE', 'ictu/pipes:2'
     pipeworksCmd: pipeworksCmd
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
