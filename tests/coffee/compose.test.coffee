@@ -179,9 +179,10 @@ describe 'Compose', ->
         cap_add: ['NET_ADMIN']
         labels: 'bigboat.service.type': 'net'
         stop_signal: 'SIGKILL'
-    it 'should should add a network container for compose service of type \'service\'', ->
+        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
+    it 'should add a network container for compose service of type \'service\'', ->
       containerTest 'service'
-    it 'should should add a network container for compose service of type \'oneoff\'', ->
+    it 'should add a network container for compose service of type \'oneoff\'', ->
       containerTest 'oneoff'
     it 'should inherit all labels from the service container, except the bigboat.service.type label', ->
       service =

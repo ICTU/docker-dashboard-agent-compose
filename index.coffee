@@ -11,7 +11,7 @@ NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX
 
 pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ dhclient @3055'
 vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
-scanCmd = env.get "NETWORK_SCAN_CMD', 'nmap -sP -n 10.25.#{vlan}.51-240"
+scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.#{vlan}.51-240"
 
 config =
   domain: env.assert 'DOMAIN'
