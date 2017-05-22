@@ -180,6 +180,7 @@ describe 'Compose', ->
         labels: 'bigboat.service.type': 'net'
         stop_signal: 'SIGKILL'
         volumes: ['/var/run/dnsreg:/var/run/dnsreg']
+        restart: 'unless-stopped'
     it 'should add a network container for compose service of type \'service\'', ->
       containerTest 'service'
     it 'should add a network container for compose service of type \'oneoff\'', ->

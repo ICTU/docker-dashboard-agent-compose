@@ -83,6 +83,7 @@ module.exports = (config) ->
         labels: labels
         stop_signal: 'SIGKILL'
         volumes: ['/var/run/dnsreg:/var/run/dnsreg']
+        restart: 'unless-stopped'
       if config.net_container?.healthcheck
         netcontainer.healthcheck = config.net_container.healthcheck
 
