@@ -71,17 +71,49 @@ describe 'Storage', ->
     captor.value()
     td.verify cb null, {name: 'bucket1', size: 1234}
 
-  it 'should periodically publish data storage statistics to mqtt', ->
+  it 'should periodically publish data storage statistics to mqtt if data store scan is enabled', ->
     agent = td.object ['on']
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: true
     td.verify storageLib.publishDataStoreUsage(null, '/agent/storage/size', '/rootDir')
     td.verify storageLib.runPeriodically td.matchers.anything()
 
-  it 'should periodically publish docker graph statistics to mqtt', ->
+  it 'should periodically publish docker graph statistics to mqtt if data store scan is enabled', ->
     agent = td.object ['on']
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: true
     td.verify storageLib.publishDataStoreUsage(null, '/agent/docker/graph', '/docker/graph')
     td.verify storageLib.runPeriodically td.matchers.anything()
+
+  it 'should NOT periodically publish data storage statistics to mqtt if data store scan is disabled', ->
+    agent = td.object ['on']
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: false
+    td.verify storageLib.publishDataStoreUsage(), {times: 0, ignoreExtraArgs: true}
+    td.verify storageLib.runPeriodically(), {times: 0, ignoreExtraArgs: true}
+
+  it 'should NOT periodically publish docker graph statistics to mqtt if data store scan is disabled', ->
+    agent = td.object ['on']
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: false
+    td.verify storageLib.publishDataStoreUsage(), {times: 0, ignoreExtraArgs: true}
+    td.verify storageLib.runPeriodically(), {times: 0, ignoreExtraArgs: true}
 
   it 'should watch for changes on the base path and publish storage buckets', ->
     agent = td.object ['on']

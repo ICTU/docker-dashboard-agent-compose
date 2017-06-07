@@ -13,6 +13,9 @@ pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ 0/0 @3055
 vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
 scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.#{vlan}.51-240"
 
+datastoreScanEnabled = env.get 'DATASTORE_SCAN_ENABLED', true
+if datastoreScanEnabled is 'false' then datastoreScanEnabled = false
+
 config =
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
@@ -39,6 +42,8 @@ config =
     pipeworksCmd: pipeworksCmd
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
+  datastore:
+    scanEnabled: datastoreScanEnabled
 
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
