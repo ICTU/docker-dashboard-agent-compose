@@ -24,25 +24,33 @@ module.exports = (services) ->
 
   # we now have a dependency graph with all services and their dependencies
 
-  started = []
-  done = []
+  started = [] # services that are started but are not yet done
+  done = []    # services that are started and all startChecks are complete
   serviceRampUp = _.debounce ->
     readyToStart = []
     for service of services
       deps = graph.dependenciesOf(service)
-      # if this service doesn't have dependencies or all dependencies are started, this service can be started too
+      # start this service if:
+      # 1. this service doesn't have dependencies or all dependencies are done
+      # 2. this service is not already started
       if (_.difference deps, done).length is 0 and service not in started
         readyToStart.push service
     console.log 'readyToStart', readyToStart
     start readyToStart if readyToStart.length isnt 0
   , 500
 
+  # the service is sucessfully started
   serviceStarted = (service) ->
     console.log 'serviceStarted', service
     done = _.union done, [service]
     console.log 'done', done
     setTimeout serviceRampUp, 0
+  # the service has failed
+  serviceFailed = (service) ->
+    console.log 'serviceFailed', service
 
+
+  # runs the startCheck until it succeeds or maxes out the retries
   runStartCheck = (service, condition, interval, timeout, retries) ->
     tries = 0
     f = ->
@@ -59,6 +67,7 @@ module.exports = (services) ->
           serviceStarted service
     setTimeout f, interval
 
+  # schedules the startCheck if any
   scheduleStartCheck = (service) ->
     if condition = services[service].labels['bigboat.startcheck.condition']
       interval = parseInt services[service].labels['bigboat.startcheck.interval']
@@ -70,6 +79,7 @@ module.exports = (services) ->
       console.log 'service has no startcheck:', service
       serviceStarted service
 
+  # emits a startComposeServices and schedules startChecks for these services
   start = (services) ->
     eventEmitter.emit 'startComposeServices', services, ->
       for service in services
