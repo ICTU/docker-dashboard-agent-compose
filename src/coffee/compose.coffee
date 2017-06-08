@@ -73,7 +73,9 @@ module.exports = (config) ->
       labels = _.extend {}, service.labels,
         'bigboat.service.type': 'net'
         'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | 10.25'
-        'bigboat.startcheck.interval': '1000'
+        'bigboat.startcheck.interval': '5000'
+        'bigboat.startcheck.timeout': '10000'
+        'bigboat.startcheck.retries': '25'
       subDomain = "#{instance}.#{config.domain}.#{config.tld}"
       netcontainer =
         image: config.net_container.image
