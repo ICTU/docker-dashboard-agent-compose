@@ -67,9 +67,12 @@ module.exports = (config) ->
               console.log 'started', serviceNames
               cb()
 
-          runCmd = (service, cmd, cb)->
-            res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{service} #{cmd}"
-            cb res.code is 1
+          runCmd = (service, cmd, timeout, cb)->
+            opts =
+              timeout: timeout
+              killSignal: 'SIGKILL'
+            res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{service} #{cmd}", opts
+            cb res is null or res.code is 1
 
           scheduler = Scheduler composition.services
           scheduler.on 'startComposeServices', startComposeServices
