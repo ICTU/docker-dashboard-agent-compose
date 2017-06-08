@@ -71,27 +71,74 @@ describe 'Storage', ->
     captor.value()
     td.verify cb null, {name: 'bucket1', size: 1234}
 
-  it 'should periodically publish data storage statistics to mqtt', ->
+  it 'should periodically publish data storage statistics to mqtt if data store scan is enabled', ->
     agent = td.object ['on']
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: true
     td.verify storageLib.publishDataStoreUsage(null, '/agent/storage/size', '/rootDir')
     td.verify storageLib.runPeriodically td.matchers.anything()
 
-  it 'should periodically publish docker graph statistics to mqtt', ->
+  it 'should periodically publish docker graph statistics to mqtt if data store scan is enabled', ->
     agent = td.object ['on']
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: true
     td.verify storageLib.publishDataStoreUsage(null, '/agent/docker/graph', '/docker/graph')
     td.verify storageLib.runPeriodically td.matchers.anything()
 
-  it 'should watch for changes on the base path and publish storage buckets', ->
+  it 'should NOT periodically publish data storage statistics to mqtt if data store scan is disabled', ->
+    agent = td.object ['on']
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: false
+    td.verify storageLib.publishDataStoreUsage(), {times: 0, ignoreExtraArgs: true}
+    td.verify storageLib.runPeriodically(), {times: 0, ignoreExtraArgs: true}
+
+  it 'should NOT periodically publish docker graph statistics to mqtt if data store scan is disabled', ->
+    agent = td.object ['on']
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker:
+        graph: path: '/docker/graph'
+      datastore: scanEnabled: false
+    td.verify storageLib.publishDataStoreUsage(), {times: 0, ignoreExtraArgs: true}
+    td.verify storageLib.runPeriodically(), {times: 0, ignoreExtraArgs: true}
+
+  it 'should watch for changes on the base path and publish storage buckets when data store scan is enabled', ->
     agent = td.object ['on']
     mqtt = td.object ['publish']
     argIsFs = td.matchers.argThat (arg) -> arg is fs
     captor = td.matchers.captor()
 
-    storage agent, mqtt, dataDir: '/rootDir', domain: 'myDomain', docker: graph: path: '/docker/graph'
+    storage agent, mqtt,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker: graph: path: '/docker/graph'
+      datastore: scanEnabled: true
     td.verify fs.watch '/rootDir/myDomain', captor.capture()
     captor.value()
     td.verify storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain', captor.capture()
     captor.value null, 'some-buckets'
     td.verify mqtt.publish '/agent/storage/buckets', 'some-buckets'
+
+  it 'should NOT watch for changes on the base path and publish storage buckets when data store scan is disabled', ->
+    agent = td.object ['on']
+
+    storage agent, null,
+      dataDir: '/rootDir'
+      domain: 'myDomain'
+      docker: graph: path: '/docker/graph'
+      datastore: scanEnabled: false
+    td.verify fs.watch(), {times: 0, ignoreExtraArgs: true}
+    td.verify storageLib.listStorageBuckets(), {times: 0, ignoreExtraArgs: true}

@@ -22,27 +22,3 @@ describe 'Env', ->
 
     it 'should return the default argument if the environment variable is not set', ->
       assert.equal env.get('nonexistingkey', 'default123'), 'default123'
-
-  describe 'assertVlan', ->
-    vlanTest = (vlan) -> it "vlan #{vlan}", ->
-      process = td.object env: {vlan: vlan}, exit: ->
-      assert.equal env._assertVlan(process, null, 'vlan'), vlan
-      td.verify process.exit(1), {times: 0}
-    describe 'should accept', ->
-      vlanTest "#{i}" for i in [1..4095] by 100
-      vlanTest '4095'
-
-    negativeVlanTest = (vlan) -> it "vlan #{vlan}", ->
-      process = td.object env: {vlan: vlan}, exit: ->
-      console = td.object error: ->
-      env._assertVlan(process, console, 'vlan')
-      td.verify process.exit(1), times: 1
-      td.verify console.error('Error: Environment variable \'vlan\' should be a number between 1 and 4095 or not set at all'), times: 1
-    describe 'should not accept', ->
-      negativeVlanTest '0'
-      negativeVlanTest '4096'
-      negativeVlanTest 'bogus'
-
-    describe 'behavior when environment variable is not set', ->
-      it 'should simply return when vlan is not set', ->
-        assert.equal env.assertVlan('notsetvlan'), undefined

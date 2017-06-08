@@ -4,18 +4,18 @@ lib           = require './storage/lib.coffee'
 
 module.exports = (agent, mqtt, config) ->
 
-  lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/storage/size', config.dataDir)
-  lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/docker/graph', config.docker.graph.path)
-
   publishStorageBuckets = (err, buckets) ->
     mqtt.publish '/agent/storage/buckets', buckets unless err
 
-
   basePath = path.join config.dataDir, config.domain
 
-  lib.listStorageBuckets fs, basePath, publishStorageBuckets
-  fs.watch basePath, (eventType, filename) ->
+  if config.datastore?.scanEnabled
+    lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/storage/size', config.dataDir)
+    lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/docker/graph', config.docker.graph.path)
+
     lib.listStorageBuckets fs, basePath, publishStorageBuckets
+    fs.watch basePath, (eventType, filename) ->
+      lib.listStorageBuckets fs, basePath, publishStorageBuckets
 
   agent.on '/storage/list', (params, data, callback) ->
     lib.listStorageBuckets fs, basePath, (err, buckets) ->

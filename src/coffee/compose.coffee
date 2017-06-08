@@ -5,8 +5,7 @@ resolvep  = require 'resolve-path'
 composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
-  vlan = if config.vlan then " @#{config.vlan}" else  ''
-  networkValue = "#{config.host_if} -i eth0 @CONTAINER_NAME@ dhclient#{vlan}"
+  networkValue = config.net_container.pipeworksCmd
 
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add
@@ -77,7 +76,7 @@ module.exports = (config) ->
         'bigboat.startcheck.interval': '1000'
       subDomain = "#{instance}.#{config.domain}.#{config.tld}"
       netcontainer =
-        image: 'ictu/pipes:1'
+        image: config.net_container.image
         environment: eth0_pipework_cmd: networkValue
         hostname: "#{serviceName}.#{subDomain}"
         dns_search: subDomain
@@ -85,6 +84,8 @@ module.exports = (config) ->
         cap_add: ["NET_ADMIN"]
         labels: labels
         stop_signal: 'SIGKILL'
+        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
+        restart: 'unless-stopped'
       if config.net_container?.healthcheck
         netcontainer.healthcheck = config.net_container.healthcheck
 

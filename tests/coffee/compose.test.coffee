@@ -1,21 +1,26 @@
 assert  = require 'assert'
 compose = require '../../src/coffee/compose.coffee'
 
+standardCfg =
+  net_container:
+    image: 'ictu/pipes:2'
+    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234'
+
 describe 'Compose', ->
   describe 'augmentCompose', ->
     it 'should set the compose version to 2.1', ->
       doc = version: '1.0'
-      compose({}).augmentCompose '', {}, doc
+      compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.version, '2.1'
     it 'should delete the volumes section from the compose file', ->
       doc = volumes: {}
       assert.equal doc.volumes?, true
-      compose({}).augmentCompose '', {}, doc
+      compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.volumes?, false
     it 'should delete the networks section from the compose file', ->
       doc = networks: {}
       assert.equal doc.networks?, true
-      compose({}).augmentCompose '', {}, doc
+      compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.networks?, false
 
   describe '_restrictCompose', ->
@@ -32,19 +37,19 @@ describe 'Compose', ->
         privileged: 1
         tmpfs: 1
         this_is_not_dropped: 1
-      compose({})._restrictCompose '', service
+      compose(standardCfg)._restrictCompose '', service
       assert.deepEqual service, this_is_not_dropped: 1
 
   describe '_migrateLinksToDependsOn', ->
     it 'should leave the document untouched when there are no links', ->
       doc = services: www: image: 'someimage'
-      compose({})._migrateLinksToDependsOn '', doc
+      compose(standardCfg)._migrateLinksToDependsOn '', doc
       assert.deepEqual doc, services: www: image: 'someimage'
     it 'should merge all links with all depends_on (as list) services', ->
       service =
         links: ['db']
         depends_on: ['some_other_service']
-      compose({})._migrateLinksToDependsOn '', service
+      compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service, depends_on:
         db: {condition: 'service_started'}
         some_other_service: {condition: 'service_started'}
@@ -52,7 +57,7 @@ describe 'Compose', ->
       service =
         links: ['db']
         depends_on: some_other_service: condition: 'some_condition'
-      compose({})._migrateLinksToDependsOn '', service
+      compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service, depends_on:
         db: {condition: 'service_started'}
         some_other_service: {condition: 'some_condition'}
@@ -60,13 +65,13 @@ describe 'Compose', ->
       service =
         links: ['db']
         depends_on: db: condition: 'my_specific_condition'
-      compose({})._migrateLinksToDependsOn '', service
+      compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service, depends_on:
         db: {condition: 'my_specific_condition'}
 
   describe '_resolvePath', ->
     it 'should resolve a path relative to a given root', ->
-      c = compose({})
+      c = compose(standardCfg)
       assert.equal c._resolvePath('/some/root', '/my/rel/path'), '/some/root/my/rel/path'
       assert.equal c._resolvePath('/some/root/', '/my/rel/path'), '/some/root/my/rel/path'
       assert.equal c._resolvePath('/some/root', 'my/rel/path'), '/some/root/my/rel/path'
@@ -75,10 +80,10 @@ describe 'Compose', ->
       assert.equal c._resolvePath('/some/root/', '/some/root/../../one/level/up'), '/some/root/one/level/up'
     it 'should throw an error when a relative path resolves outside of the given root', ->
       assert.throws ->
-        compose({})._resolvePath '/some/root/', '../one/level/up'
+        compose(standardCfg)._resolvePath '/some/root/', '../one/level/up'
       , Error
       assert.throws ->
-        compose({})._resolvePath '/some/root/', '/../../.././one/level/up'
+        compose(standardCfg)._resolvePath '/some/root/', '/../../.././one/level/up'
       , Error
 
   describe '_addDockerMapping', ->
@@ -86,17 +91,17 @@ describe 'Compose', ->
       service =
         volumes: ['existing_volume']
         labels: 'bigboat.container.map_docker': 'true'
-      compose({})._addDockerMapping '', service
+      compose(standardCfg)._addDockerMapping '', service
       assert.deepEqual service, Object.assign {volumes: ['existing_volume', '/var/run/docker.sock:/var/run/docker.sock']}, service
     it 'should not do anything when the label is missing', ->
       service = volumes: ['existing_volume']
-      compose({})._addDockerMapping '', service
+      compose(standardCfg)._addDockerMapping '', service
       assert.deepEqual service, Object.assign {volumes: ['existing_volume']}, service
 
   describe '_addExtraLabels', ->
     it 'should add bigboat domain and tld labels based on configuration', ->
       service = labels: existing_label: 'value'
-      compose({domain:'google', tld:'com'})._addExtraLabels '', service
+      compose(Object.assign {}, standardCfg, {domain:'google', tld:'com'})._addExtraLabels '', service
       assert.deepEqual service, labels:
         existing_label: 'value'
         'bigboat.domain': 'google'
@@ -104,7 +109,7 @@ describe 'Compose', ->
 
   describe '_addVolumeMapping', ->
     volumeTest = (inputVolume, expectedVolume, opts = {storageBucket: 'bucket1'}) ->
-      c = compose dataDir: '/local/data/', domain: 'google'
+      c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = volumes: [inputVolume]
       c._addVolumeMapping '', service, opts
       assert.deepEqual service, volumes: [expectedVolume]
@@ -127,19 +132,19 @@ describe 'Compose', ->
     it 'should remove a postfix (:rw) from an unmapped volume when no data bucket is given (compose bug)', ->
       volumeTest '/internal/volume:rw', '/internal/volume'
     it 'should discard a volume with a mapping that resolves outside of the bucket root', ->
-      c = compose dataDir: '/local/data/', domain: 'google'
+      c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = volumes: ['../../my-malicious-volume/:/internal']
       c._addVolumeMapping '', service, storageBucket: 'bucket1'
       assert.deepEqual service, volumes: []
     it 'should not create invalid volume section', ->
-      c = compose dataDir: '/local/data/', domain: 'google'
+      c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = image: 'something'
       c._addVolumeMapping '', service, {storageBucket: 'bucket1'}
       assert.deepEqual service, image: 'something'
 
   describe '_addLocaltimeMapping', ->
     localtimeTest = (service) ->
-      c = compose dataDir: '/local/data/', domain: 'google'
+      c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       c._addLocaltimeMapping '', service
       expected = service.volumes or []
       expected.push '/etc/localtime:/etc/localtime:ro'
@@ -152,7 +157,10 @@ describe 'Compose', ->
   describe '_addNetworkContainer', ->
     invokeTestSubject = (service, cfgNetContainer) ->
       doc = services: {}
-      config = domain: 'google', tld: 'com', host_if: 'eth12', vlan: 1234, net_container: cfgNetContainer
+      config = Object.assign {}, standardCfg,
+        domain: 'google'
+        tld: 'com'
+        net_container: Object.assign {}, standardCfg.net_container, cfgNetContainer
       compose(config)._addNetworkContainer 'service1', service, 'instance2', doc
       doc
     containerTest = (serviceType) ->
@@ -163,17 +171,19 @@ describe 'Compose', ->
       assert.equal service.network_mode, 'service:bb-net-service1'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
       assert.deepEqual doc.services['bb-net-service1'],
-        image: 'ictu/pipes:1'
-        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ dhclient @1234"
+        image: 'ictu/pipes:2'
+        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234"
         hostname: 'service1.instance2.google.com'
         dns_search: 'instance2.google.com'
         network_mode: 'none'
         cap_add: ['NET_ADMIN']
         labels: 'bigboat.service.type': 'net'
         stop_signal: 'SIGKILL'
-    it 'should should add a network container for compose service of type \'service\'', ->
+        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
+        restart: 'unless-stopped'
+    it 'should add a network container for compose service of type \'service\'', ->
       containerTest 'service'
-    it 'should should add a network container for compose service of type \'oneoff\'', ->
+    it 'should add a network container for compose service of type \'oneoff\'', ->
       containerTest 'oneoff'
     it 'should inherit all labels from the service container, except the bigboat.service.type label', ->
       service =
@@ -209,3 +219,8 @@ describe 'Compose', ->
       doc = invokeTestSubject service
       assert.equal service.network_mode, 'service:bb-net-myservice'
       assert.deepEqual doc, services: {}
+
+    it 'should use the provided network image version', ->
+      service = labels: 'bigboat.service.type': 'service'
+      doc = invokeTestSubject service, image: 'ictu/pipes:2'
+      assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'
