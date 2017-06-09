@@ -167,6 +167,7 @@ describe 'Compose', ->
       service =
         labels:
           'bigboat.service.type': serviceType
+
       doc = invokeTestSubject service
       assert.equal service.network_mode, 'service:bb-net-service1'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
@@ -177,7 +178,12 @@ describe 'Compose', ->
         dns_search: 'instance2.google.com'
         network_mode: 'none'
         cap_add: ['NET_ADMIN']
-        labels: 'bigboat.service.type': 'net'
+        labels:
+          'bigboat.service.type': 'net'
+          'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | grep 10.25'
+          'bigboat.startcheck.interval': '5000'
+          'bigboat.startcheck.retries': '25'
+          'bigboat.startcheck.timeout': '10000'
         stop_signal: 'SIGKILL'
         volumes: ['/var/run/dnsreg:/var/run/dnsreg']
         restart: 'unless-stopped'
@@ -193,6 +199,10 @@ describe 'Compose', ->
       doc  = invokeTestSubject service
       assert.deepEqual doc.services['bb-net-service1'].labels,
         'bigboat.service.type': 'net'
+        'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | grep 10.25'
+        'bigboat.startcheck.interval': '5000'
+        'bigboat.startcheck.retries': '25'
+        'bigboat.startcheck.timeout': '10000'
         some_other_label: 'value'
 
     it 'should set the netcontainer healthcheck when configured', ->
