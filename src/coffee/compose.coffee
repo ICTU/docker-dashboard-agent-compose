@@ -72,7 +72,7 @@ module.exports = (config) ->
     if service.labels['bigboat.service.type'] in ['service', 'oneoff']
       labels = _.extend {}, service.labels,
         'bigboat.service.type': 'net'
-        'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | 10.25'
+        'bigboat.startcheck.condition': 'ifconfig eth0 | grep inet | grep 10.25'
         'bigboat.startcheck.interval': '5000'
         'bigboat.startcheck.timeout': '10000'
         'bigboat.startcheck.retries': '25'
