@@ -78,9 +78,11 @@ module.exports = (config) ->
           scheduler = Scheduler composition.services
           scheduler.on 'startComposeServices', startComposeServices
           scheduler.on 'runStartCheck', runCmd
-          scheduler.on 'serviceStartCheckSucceeded', (service) ->
+          scheduler.on 'serviceStartCheckSucceeded', (service, def) ->
             emitLog "Start check for '#{service}' succeeded\n"
-          scheduler.on 'serviceStartCheckFailed', (service, retries) ->
+            eventEmitter.emit 'startCheck', instance, def, true
+          scheduler.on 'serviceStartCheckFailed', (service, retries, def) ->
+            eventEmitter.emit 'startCheck', instance, def, false
             emitLog "Start check for '#{service}' failed after #{retries} attempts\n"
 
 

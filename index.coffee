@@ -105,6 +105,12 @@ agent.on 'start', (data) ->
           instance: instanceName
           data: logData
         mqtt.publish '/agent/docker/log/startup', event
+      start.on 'startCheck', (instance, service, success) ->
+        mqtt.publish '/agent/service/startcheck', {
+          instance: instance
+          service: service
+          success: success
+        }
 
 agent.on 'stop', (data) ->
   instanceName = data.instance.name

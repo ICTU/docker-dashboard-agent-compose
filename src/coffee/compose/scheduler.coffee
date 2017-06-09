@@ -45,11 +45,11 @@ module.exports = (services) ->
     done = _.union done, [service]
     console.log 'done', done
     setTimeout serviceRampUp, 0
-    eventEmitter.emit 'serviceStartCheckSucceeded', service
+    eventEmitter.emit 'serviceStartCheckSucceeded', service, services[service]
   # the service has failed
   serviceFailed = (service, retries) ->
     console.log 'serviceFailed', service
-    eventEmitter.emit 'serviceStartCheckFailed', service, retries
+    eventEmitter.emit 'serviceStartCheckFailed', service, retries, services[service]
 
 
   # runs the startCheck until it succeeds or maxes out the retries
