@@ -39,7 +39,7 @@ module.exports = (config) ->
 
     env = buildEnv config, data
 
-    emitLogCb = (data) -> eventEmitter.emit 'startup-log', data.toString()
+    emitLog = (data) -> eventEmitter.emit 'startup-log', data.toString()
 
     volumePaths = []
     for service in _.values composition.services when service.volumes
@@ -59,24 +59,30 @@ module.exports = (config) ->
 
     lib.ensureMkdir scriptDir, ->
       lib.writeFile scriptPath, compose, ->
-        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLog}, ->
 
           startComposeServices = (serviceNames, cb)->
             args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], serviceNames
-            lib.runCmd 'docker-compose', args, env, {stderr: emitLogCb}, ->
+            lib.runCmd 'docker-compose', args, env, {stderr: emitLog}, ->
               console.log 'started', serviceNames
               cb()
 
           runCmd = (service, cmd, timeout, cb)->
+            emitLog "Running start check for '#{service}': #{cmd}\n"
             opts =
               timeout: timeout
               killSignal: 'SIGKILL'
             res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{service} #{cmd}", opts
-            cb res is null or res.code is 1
+            cb res is null or res.code isnt 0
 
           scheduler = Scheduler composition.services
           scheduler.on 'startComposeServices', startComposeServices
           scheduler.on 'runStartCheck', runCmd
+          scheduler.on 'serviceStartCheckSucceeded', (service) ->
+            emitLog "Start check for '#{service}' succeeded\n"
+          scheduler.on 'serviceStartCheckFailed', (service, retries) ->
+            emitLog "Start check for '#{service}' failed after #{retries} attempts\n"
+
 
     eventEmitter
 
@@ -87,17 +93,17 @@ module.exports = (config) ->
 
     env = buildEnv config, data
     emitCbCalled = false
-    emitLogCb = (data) ->
+    emitLog = (data) ->
       emitCbCalled = true
       eventEmitter.emit 'teardown-log', data.toString()
 
-    lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+    lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLog}, ->
       if emitCbCalled
         console.log 'Done, stopped', composeProjectName
       else
         # TODO: this fallback mechanism should be removed in future versions (e.g. v + 10), current(v)=2.0.1
         console.log "#{composeProjectName} did not stop, falling back on old stop behavior based on instance name only"
-        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLog}, ->
           console.log 'Done, stopped', composeProjectName
 
     eventEmitter
