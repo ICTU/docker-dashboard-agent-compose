@@ -41,32 +41,32 @@ module.exports = (services) ->
 
   # the service is sucessfully started
   serviceStarted = (service) ->
-    console.log 'serviceStarted', service
+    # console.log 'serviceStarted', service
     done = _.union done, [service]
     console.log 'done', done
     setTimeout serviceRampUp, 0
   # the service has failed
   serviceFailed = (service, retries) ->
-    console.log 'serviceFailed', service
+    # console.log 'serviceFailed', service
 
 
   # runs the startCheck until it succeeds or maxes out the retries
   runStartCheck = (service, condition, interval, timeout, retries) ->
     tries = 0
     f = ->
-      console.log 'runStartCheck', service, interval, timeout, retries, condition
+      # console.log 'runStartCheck', service, interval, timeout, retries, condition
       eventEmitter.emit 'runStartCheck', service, condition, timeout, (err) ->
         tries = tries + 1
         if err
-          console.log 'start check failed', service, condition
+          # console.log 'start check failed', service, condition
           if tries <= retries
             setTimeout f, interval
           else
-            console.log 'Too many tries', tries, ' Giving up on', service
+            # console.log 'Too many tries', tries, ' Giving up on', service
             eventEmitter.emit 'serviceStartCheckFailed', service, retries, services[service]
             serviceFailed service, retries
         else
-          console.log 'start check succeeded', service, condition
+          # console.log 'start check succeeded', service, condition
           eventEmitter.emit 'serviceStartCheckSucceeded', service, services[service]
           serviceStarted service
     setTimeout f, interval
@@ -80,14 +80,14 @@ module.exports = (services) ->
 
       runStartCheck service, condition, interval, timeout, retries
     else
-      console.log 'service has no startcheck:', service
+      # console.log 'service has no startcheck:', service
       serviceStarted service
 
   # emits a startComposeServices and schedules startChecks for these services
   start = (services) ->
+    started.push s for s in services
     eventEmitter.emit 'startComposeServices', services, ->
       for service in services
-        started.push service
         scheduleStartCheck service
 
   setTimeout serviceRampUp, 0
