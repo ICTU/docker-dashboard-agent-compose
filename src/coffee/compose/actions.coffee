@@ -62,7 +62,7 @@ module.exports = (config) ->
         lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLog}, ->
 
           startComposeServices = (serviceNames, cb)->
-            args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], serviceNames
+            args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans', '--no-deps', '--no-build'], serviceNames
             lib.runCmd 'docker-compose', args, env, {stderr: emitLog}, ->
               console.log 'started', serviceNames
               cb()
