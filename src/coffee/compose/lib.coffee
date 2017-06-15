@@ -37,12 +37,12 @@ module.exports =
       if err then console.error 'Error writing file', err
       else success null, path
 
-  runCmd: (cmd, args, env, callbacks, exitCb) ->
+  runCmd: (cmd, args, env, callbacks, exitCb, _console = console) ->
     spawned = spawn cmd, args, env: (_.extend {}, process.env, env)
     if spawned.error
-      console.error "Error, unable to execute", cmd, args, pull.error
+      _console.error "Error, unable to execute", cmd, args, spawned.error
     else
-      console.log 'success', cmd, args
+      _console.log 'success', cmd, args
       spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
       spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
       spawned.on 'close', exitCb
