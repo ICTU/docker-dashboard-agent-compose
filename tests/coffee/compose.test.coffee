@@ -2,9 +2,8 @@ assert  = require 'assert'
 compose = require '../../src/coffee/compose.coffee'
 
 standardCfg =
-  net_container:
-    image: 'ictu/pipes:2'
-    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234'
+  network:
+    name: 'testnet'
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
@@ -17,11 +16,10 @@ describe 'Compose', ->
       assert.equal doc.volumes?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.volumes?, false
-    it 'should delete the networks section from the compose file', ->
-      doc = networks: {}
-      assert.equal doc.networks?, true
+    it 'should add a default external network', ->
+      doc = {networks: somenet: name: 'will-be-deleted'}
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.equal doc.networks?, false
+      assert.deepEqual doc.networks, {default: external: name: 'testnet'}
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
@@ -32,7 +30,6 @@ describe 'Compose', ->
         devices: 1
         dns: 1
         dns_search: 1
-        networks: 1
         ports: 1
         privileged: 1
         tmpfs: 1
@@ -154,73 +151,19 @@ describe 'Compose', ->
     it 'should add /etc/localtime volume mapping when there are other volumes', ->
       localtimeTest volumes: ['volume1', '/mapped:/volume']
 
-  describe '_addNetworkContainer', ->
+  describe '_addNetConfig', ->
     invokeTestSubject = (service, cfgNetContainer) ->
       doc = services: {}
       config = Object.assign {}, standardCfg,
         domain: 'google'
         tld: 'com'
-        net_container: Object.assign {}, standardCfg.net_container, cfgNetContainer
-      compose(config)._addNetworkContainer 'service1', service, 'instance2', doc
+      compose(config)._addNetConfig 'service1', service, 'instance2', doc
       doc
     containerTest = (serviceType) ->
       service =
         labels:
           'bigboat.service.type': serviceType
       doc = invokeTestSubject service
-      assert.equal service.network_mode, 'service:bb-net-service1'
-      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
-      assert.deepEqual doc.services['bb-net-service1'],
-        image: 'ictu/pipes:2'
-        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234"
-        hostname: 'service1.instance2.google.com'
-        dns_search: 'instance2.google.com'
-        network_mode: 'none'
-        cap_add: ['NET_ADMIN']
-        labels: 'bigboat.service.type': 'net'
-        stop_signal: 'SIGKILL'
-        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
-        restart: 'unless-stopped'
-    it 'should add a network container for compose service of type \'service\'', ->
+      assert.deepEqual service.networks.default.aliases, ['service1.instance2.google.com']
+    it 'should configure the network for each service', ->
       containerTest 'service'
-    it 'should add a network container for compose service of type \'oneoff\'', ->
-      containerTest 'oneoff'
-    it 'should inherit all labels from the service container, except the bigboat.service.type label', ->
-      service =
-        labels:
-          'bigboat.service.type': 'service'
-          some_other_label: 'value'
-      doc  = invokeTestSubject service
-      assert.deepEqual doc.services['bb-net-service1'].labels,
-        'bigboat.service.type': 'net'
-        some_other_label: 'value'
-
-    it 'should set the netcontainer healthcheck when configured', ->
-      service =
-        labels:
-          'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, healthcheck: 'some-check'
-      assert.equal doc.services['bb-net-service1'].healthcheck, 'some-check'
-      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_healthy'
-
-    it 'should use the container_name from the service, if any, to populate the netcontainer name', ->
-      service =
-        labels:
-          'bigboat.service.type': 'oneoff'
-        container_name: 'some-name'
-      doc = invokeTestSubject service
-      assert.equal doc.services['bb-net-service1'].container_name, 'some-name-net'
-
-    it 'should simply change the network_mode to use an existing netcontainer when the service type is anything other than service or oneoff', ->
-      service =
-        labels:
-          'bigboat.service.type': 'something-else'
-          'bigboat.service.name': 'myservice'
-      doc = invokeTestSubject service
-      assert.equal service.network_mode, 'service:bb-net-myservice'
-      assert.deepEqual doc, services: {}
-
-    it 'should use the provided network image version', ->
-      service = labels: 'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, image: 'ictu/pipes:2'
-      assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'

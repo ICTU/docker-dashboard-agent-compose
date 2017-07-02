@@ -5,13 +5,7 @@ Mqtt          = require './src/coffee/mqtt'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
-ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
-NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
-NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
-
-pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ 0/0 @3055'
-vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
-scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.#{vlan}.51-240"
+scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.40.0.51-240"
 
 datastoreScanEnabled = env.get 'DATASTORE_SCAN_ENABLED', true
 if datastoreScanEnabled is 'false' then datastoreScanEnabled = false
@@ -34,24 +28,12 @@ config =
     scanCmd: scanCmd
     scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
+    name: env.get 'NETWORK_NAME', 'bigboat-apps'
   dhcp:
     scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
-  net_container:
-    image: env.get 'NETWORK_IMAGE', 'ictu/pipes:2'
-    pipeworksCmd: pipeworksCmd
-    startcheck:
-      test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
   datastore:
     scanEnabled: datastoreScanEnabled
-
-
-if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
-  config.net_container.healthcheck =
-      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
-      interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
-      timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
-      retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 4)
 
 console.log 'Config \n\n', config, '\n\n'
 

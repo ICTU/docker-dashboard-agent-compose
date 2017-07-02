@@ -5,8 +5,6 @@ resolvep  = require 'resolve-path'
 composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
-  networkValue = config.net_container.pipeworksCmd
-
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add
     delete service.cap_drop
@@ -14,7 +12,6 @@ module.exports = (config) ->
     delete service.devices
     delete service.dns
     delete service.dns_search
-    delete service.networks
     delete service.ports
     delete service.privileged
     delete service.tmpfs
@@ -68,49 +65,25 @@ module.exports = (config) ->
     service.volumes = [] unless service.volumes
     service.volumes.push "/etc/localtime:/etc/localtime:ro"
 
-  _addNetworkContainer: addNetworkContainer = (serviceName, service, instance, doc) ->
-    if service.labels['bigboat.service.type'] in ['service', 'oneoff']
-      labels = _.extend {}, service.labels,
-        'bigboat.service.type': 'net'
-      subDomain = "#{instance}.#{config.domain}.#{config.tld}"
-      netcontainer =
-        image: config.net_container.image
-        environment: eth0_pipework_cmd: networkValue
-        hostname: "#{serviceName}.#{subDomain}"
-        dns_search: subDomain
-        network_mode: 'none'
-        cap_add: ["NET_ADMIN"]
-        labels: labels
-        stop_signal: 'SIGKILL'
-        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
-        restart: 'unless-stopped'
-      if config.net_container?.healthcheck
-        netcontainer.healthcheck = config.net_container.healthcheck
+  _addNetConfig: addNetConfig = (serviceName, service, instance, doc) ->
+    subDomain = "#{instance}.#{config.domain}.#{config.tld}"
+    hostname = "#{serviceName}.#{subDomain}"
+    # drop all networks, maybe we should keep them?
+    service.networks = default: aliases: [hostname]
+    service.dns_search = subDomain
+    service.hostname = hostname unless service.hostname
+    delete service.network_mode
 
-      if service.container_name
-        netcontainer['container_name'] = "#{service.container_name}-net"
-
-      doc.services["bb-net-#{serviceName}"] = netcontainer
-      # remove the hostname if set in the service, the hostname is set from
-      # the network container
-      delete service.hostname
-      delete service.net
-      service.network_mode = "service:bb-net-#{serviceName}"
-
-      depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
-      depends_on["bb-net-#{serviceName}"] = if netcontainer.healthcheck
-        condition: 'service_healthy'
-      else
-        condition: 'service_started'
-      service.depends_on = depends_on
-
-    else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
+  _setDefaultNetwork: setDefaultNetwork = (doc) ->
+    # drop all networks, maybe we should keep them?
+    doc.networks = default: external: name: config.network.name
 
   augmentCompose: (instance, options, doc) ->
+    setDefaultNetwork doc
     for serviceName, service of doc.services
       migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
-      addNetworkContainer serviceName, service, instance, doc
+      addNetConfig serviceName, service, instance, doc
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
       addDockerMapping serviceName, service
@@ -119,5 +92,4 @@ module.exports = (config) ->
     doc.version = '2.1'
 
     delete doc.volumes
-    delete doc.networks
     doc
