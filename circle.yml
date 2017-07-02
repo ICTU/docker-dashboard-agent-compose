@@ -8,11 +8,15 @@ dependencies:
 
 test:
   override:
-    - docker run --rm -v $PWD:$PWD -w $PWD node:8 sh -c 'npm install; npm test'
-  post:
-    - cp -r ./coverage/ $CIRCLE_ARTIFACTS
-    - bash <(curl -s https://codecov.io/bash)
-    - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v
+    - echo "no tests"
+
+# test:
+#   override:
+#     - docker run --rm -v $PWD:$PWD -w $PWD node:8 sh -c 'npm install; npm test'
+#   post:
+#     - cp -r ./coverage/ $CIRCLE_ARTIFACTS
+#     - bash <(curl -s https://codecov.io/bash)
+#     - cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js -v
 
 deployment:
   tags:
