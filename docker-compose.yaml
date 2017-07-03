@@ -9,7 +9,7 @@ services:
       DOCKER_HOST: tcp://10.19.88.248:2375
       AUTH_TOKEN: innovation
       HTTP_PORT: 8080
-      PIPEWORKS_CMD: eth1 -i eth0 @CONTAINER_NAME@ dhclient @3080
+      PIPEWORKS_CMD: eth1 -i eth0 @CONTAINER_NAME@ 0/0 @3080
       MQTT_URL: mqtt://localhost
       MQTT_USER: user
       MQTT_PASS: pass
