@@ -3,9 +3,6 @@ td = require("testdouble");
 var shelljs, network;
 
 conf = {
-  net_container: {
-    pipeworksCmd: "eth1 -i eth0 @CONTAINER_NAME@ dhclient @3181"
-  },
   network: {
     scanCmd: "nmap -sP -n 10.25.181.51-240",
     scanInterval: 1234

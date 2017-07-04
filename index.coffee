@@ -9,8 +9,7 @@ ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
-pipeworksCmd = env.get 'PIPEWORKS_CMD', 'eth1 -i eth0 @CONTAINER_NAME@ 0/0 @3055'
-vlan = parseInt(pipeworksCmd.slice(-4)) - 3000
+vlan = env.assert 'NETWORK_VLAN'
 scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.#{vlan}.51-240"
 
 datastoreScanEnabled = env.get 'DATASTORE_SCAN_ENABLED', true
@@ -31,6 +30,8 @@ config =
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
+    vlan: vlan
+    parentInterface: env.get 'NETWORK_PARENT_INTERFACE', "eth0.#{vlan}"
     scanCmd: scanCmd
     scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
@@ -39,7 +40,6 @@ config =
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
   net_container:
     image: env.get 'NETWORK_IMAGE', 'ictu/pipes:2'
-    pipeworksCmd: pipeworksCmd
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
   datastore:
