@@ -5,8 +5,7 @@ standardCfg =
   net_container:
     image: 'ictu/pipes:2'
   network:
-    vlan: '1234'
-    parentInterface: 'eth2.1234'
+    name: 'apps'
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
@@ -19,19 +18,12 @@ describe 'Compose', ->
       assert.equal doc.volumes?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.volumes?, false
-    it 'should set the default macvlan network the compose file', ->
+    it 'should set the default network in the compose file', ->
       doc = networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.deepEqual doc.networks.default,
-        driver: 'macvlan'
-        driver_opts:
-          parent: 'eth2.1234'
-        ipam:
-          config: [{
-            subnet: '192.168.0.0/24'
-            gateway: '192.168.0.1'
-          }]
+        external: name: 'apps'
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->

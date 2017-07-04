@@ -102,16 +102,7 @@ module.exports = (config) ->
     else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
   _addDefaultNetwork: addDefaultNetwork = (doc) ->
-    doc.networks =
-      default:
-        driver: 'macvlan'
-        driver_opts:
-          parent: config.network.parentInterface
-        ipam:
-          config: [{
-            subnet: '192.168.0.0/24'
-            gateway: '192.168.0.1'
-          }]
+    doc.networks = default: external: name: config.network.name
 
   augmentCompose: (instance, options, doc) ->
     addDefaultNetwork doc
