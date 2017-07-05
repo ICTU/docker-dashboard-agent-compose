@@ -73,6 +73,7 @@ module.exports = (config) ->
       netcontainer =
         image: config.net_container.image
         hostname: "#{serviceName}.#{subDomain}"
+        networks: appsnet: aliases: [serviceName]
         dns: ['10.25.55.2', '10.25.55.3']
         dns_search: subDomain
         cap_add: ["NET_ADMIN"]
@@ -103,7 +104,7 @@ module.exports = (config) ->
     else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
   _addDefaultNetwork: addDefaultNetwork = (doc) ->
-    doc.networks = default: external: name: config.network.name
+    doc.networks = appsnet: external: name: config.network.name
 
   augmentCompose: (instance, options, doc) ->
     addDefaultNetwork doc

@@ -22,8 +22,7 @@ describe 'Compose', ->
       doc = networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.deepEqual doc.networks.default,
-        external: name: 'apps'
+      assert.deepEqual doc.networks, appsnet: external: name: 'apps'
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
@@ -174,6 +173,7 @@ describe 'Compose', ->
       assert.deepEqual doc.services['bb-net-service1'],
         image: 'ictu/pipes:2'
         hostname: 'service1.instance2.google.com'
+        networks: appsnet: aliases: ['service1']
         dns: ['10.25.55.2', '10.25.55.3']
         dns_search: 'instance2.google.com'
         cap_add: ['NET_ADMIN']
