@@ -73,6 +73,7 @@ module.exports = (config) ->
       netcontainer =
         image: config.net_container.image
         hostname: "#{serviceName}.#{subDomain}"
+        dns: ['10.25.55.2', '10.25.55.3']
         dns_search: subDomain
         cap_add: ["NET_ADMIN"]
         labels: labels

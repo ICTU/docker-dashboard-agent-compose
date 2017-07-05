@@ -174,6 +174,7 @@ describe 'Compose', ->
       assert.deepEqual doc.services['bb-net-service1'],
         image: 'ictu/pipes:2'
         hostname: 'service1.instance2.google.com'
+        dns: ['10.25.55.2', '10.25.55.3']
         dns_search: 'instance2.google.com'
         cap_add: ['NET_ADMIN']
         labels: 'bigboat.service.type': 'net'
