@@ -9,8 +9,6 @@ ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
-scanCmd = env.get 'NETWORK_SCAN_CMD', "nmap -sP -n 10.25.55.51-240"
-
 datastoreScanEnabled = env.get 'DATASTORE_SCAN_ENABLED', true
 if datastoreScanEnabled is 'false' then datastoreScanEnabled = false
 
@@ -30,9 +28,9 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
     name: env.assert 'NETWORK_NAME'
-    scanCmd: scanCmd
-    scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
+    parentNic: env.assert 'NETWORK_PARENT_NIC'
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
+    scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
   dhcp:
     scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
     scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
@@ -42,7 +40,6 @@ config =
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
   datastore:
     scanEnabled: datastoreScanEnabled
-
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
   config.net_container.healthcheck =
@@ -67,9 +64,13 @@ mqtt = Mqtt.connect config.mqtt
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
 
+publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
 unless config.network.scanEnabled is 'false'
-  publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
-  (require './src/js/network') config, publishNetworkInfo
+  config.network.scanCmd = env.assert 'NETWORK_SCAN_CMD'
+network = require('./src/js/network')(config, publishNetworkInfo)
+network.createProjectNet()
+network.scan() unless config.network.scanEnabled is 'false'
+
 unless config.dhcp.scanEnabled is 'false'
   publishDhcpInfo = (data) -> mqtt.publish '/dhcp/info', data
   (require './src/js/dhcp') config, publishDhcpInfo

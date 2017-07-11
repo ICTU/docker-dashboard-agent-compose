@@ -27,7 +27,7 @@ describe("network", () => {
     td
       .when(shell.exec("nmap -sP -n 10.25.181.51-240"))
       .thenReturn({ code: 0, stdout: stdout });
-    network(conf, cb, _setInterval);
+    network(conf, cb, _setInterval).scan();
     td.verify(
       cb({
         totalIps: 200,
