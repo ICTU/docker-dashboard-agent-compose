@@ -6,7 +6,7 @@ ADD . /app
 
 WORKDIR /app
 
-RUN npm install
+RUN npm install --production
 
 EXPOSE 80
 

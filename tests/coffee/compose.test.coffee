@@ -4,7 +4,8 @@ compose = require '../../src/coffee/compose.coffee'
 standardCfg =
   net_container:
     image: 'ictu/pipes:2'
-    pipeworksCmd: 'eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234'
+  network:
+    name: 'apps'
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
@@ -17,11 +18,11 @@ describe 'Compose', ->
       assert.equal doc.volumes?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.volumes?, false
-    it 'should delete the networks section from the compose file', ->
+    it 'should set the default network in the compose file', ->
       doc = networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.equal doc.networks?, false
+      assert.deepEqual doc.networks, appsnet: external: name: 'apps'
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
@@ -32,7 +33,6 @@ describe 'Compose', ->
         devices: 1
         dns: 1
         dns_search: 1
-        networks: 1
         ports: 1
         privileged: 1
         tmpfs: 1
@@ -172,10 +172,10 @@ describe 'Compose', ->
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
       assert.deepEqual doc.services['bb-net-service1'],
         image: 'ictu/pipes:2'
-        environment: eth0_pipework_cmd: "eth12 -i eth0 @CONTAINER_NAME@ 0/0 @1234"
         hostname: 'service1.instance2.google.com'
+        networks: appsnet: aliases: ['service1']
+        dns: ['10.25.55.2', '10.25.55.3']
         dns_search: 'instance2.google.com'
-        network_mode: 'none'
         cap_add: ['NET_ADMIN']
         labels: 'bigboat.service.type': 'net'
         stop_signal: 'SIGKILL'

@@ -5,8 +5,6 @@ resolvep  = require 'resolve-path'
 composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
-  networkValue = config.net_container.pipeworksCmd
-
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add
     delete service.cap_drop
@@ -14,7 +12,6 @@ module.exports = (config) ->
     delete service.devices
     delete service.dns
     delete service.dns_search
-    delete service.networks
     delete service.ports
     delete service.privileged
     delete service.tmpfs
@@ -75,10 +72,10 @@ module.exports = (config) ->
       subDomain = "#{instance}.#{config.domain}.#{config.tld}"
       netcontainer =
         image: config.net_container.image
-        environment: eth0_pipework_cmd: networkValue
         hostname: "#{serviceName}.#{subDomain}"
+        networks: appsnet: aliases: [serviceName]
+        dns: ['10.25.55.2', '10.25.55.3']
         dns_search: subDomain
-        network_mode: 'none'
         cap_add: ["NET_ADMIN"]
         labels: labels
         stop_signal: 'SIGKILL'
@@ -106,7 +103,11 @@ module.exports = (config) ->
 
     else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
+  _addDefaultNetwork: addDefaultNetwork = (doc) ->
+    doc.networks = appsnet: external: name: config.network.name
+
   augmentCompose: (instance, options, doc) ->
+    addDefaultNetwork doc
     for serviceName, service of doc.services
       migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
@@ -117,7 +118,5 @@ module.exports = (config) ->
       restrictCompose serviceName, service
 
     doc.version = '2.1'
-
     delete doc.volumes
-    delete doc.networks
     doc
