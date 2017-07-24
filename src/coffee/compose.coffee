@@ -23,7 +23,7 @@ module.exports = (config) ->
       for l in links
         deps[l] = condition: 'service_started' unless deps[l]
       service.depends_on = deps
-      delete service.links
+      # delete service.links
 
   _resolvePath: resolvePath = (root, path) ->
     path = path[1...] if path[0] is '/'

@@ -50,24 +50,30 @@ describe 'Compose', ->
         links: ['db']
         depends_on: ['some_other_service']
       compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service, depends_on:
-        db: {condition: 'service_started'}
-        some_other_service: {condition: 'service_started'}
+      assert.deepEqual service,
+        links: ['db']
+        depends_on:
+          db: {condition: 'service_started'}
+          some_other_service: {condition: 'service_started'}
     it 'should merge all links with all depends_on (as object) services', ->
       service =
         links: ['db']
         depends_on: some_other_service: condition: 'some_condition'
       compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service, depends_on:
-        db: {condition: 'service_started'}
-        some_other_service: {condition: 'some_condition'}
+      assert.deepEqual service,
+        links: ['db']
+        depends_on:
+          db: {condition: 'service_started'}
+          some_other_service: {condition: 'some_condition'}
     it 'should prefer a dependency from depends_on over one from links if they are the same', ->
       service =
         links: ['db']
         depends_on: db: condition: 'my_specific_condition'
       compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service, depends_on:
-        db: {condition: 'my_specific_condition'}
+      assert.deepEqual service,
+        links: ['db']
+        depends_on:
+          db: {condition: 'my_specific_condition'}
 
   describe '_resolvePath', ->
     it 'should resolve a path relative to a given root', ->
