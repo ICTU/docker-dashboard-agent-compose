@@ -40,6 +40,24 @@ describe 'Compose', ->
       compose(standardCfg)._restrictCompose '', service
       assert.deepEqual service, this_is_not_dropped: 1
 
+  describe '_moveLinksToNetContainer', ->
+    it 'should leave the document untouched when there are no links', ->
+      doc = services: www: image: 'someimage'
+      compose(standardCfg)._moveLinksToNetContainer 'www', doc.services.www, doc
+      assert.deepEqual doc, services: www: image: 'someimage'
+    it 'should move all links to links between net containers', ->
+      doc =
+        services:
+          'bb-net-myservice': {}
+          myservice:
+            links: ['db', "service:alias"]
+      compose(standardCfg)._moveLinksToNetContainer 'myservice', doc.services.myservice, doc
+      assert.deepEqual doc.services['bb-net-myservice'],
+        links: [
+          'bb-net-db:db'
+          'bb-net-service:alias'
+        ]
+
   describe '_migrateLinksToDependsOn', ->
     it 'should leave the document untouched when there are no links', ->
       doc = services: www: image: 'someimage'
@@ -51,7 +69,6 @@ describe 'Compose', ->
         depends_on: ['some_other_service']
       compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service,
-        links: ['db']
         depends_on:
           db: {condition: 'service_started'}
           some_other_service: {condition: 'service_started'}
@@ -61,7 +78,6 @@ describe 'Compose', ->
         depends_on: some_other_service: condition: 'some_condition'
       compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service,
-        links: ['db']
         depends_on:
           db: {condition: 'service_started'}
           some_other_service: {condition: 'some_condition'}
@@ -71,7 +87,6 @@ describe 'Compose', ->
         depends_on: db: condition: 'my_specific_condition'
       compose(standardCfg)._migrateLinksToDependsOn '', service
       assert.deepEqual service,
-        links: ['db']
         depends_on:
           db: {condition: 'my_specific_condition'}
 
