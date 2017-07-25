@@ -198,6 +198,7 @@ describe 'Compose', ->
         dns: ['10.25.55.2', '10.25.55.3']
         dns_search: 'instance2.google.com'
         cap_add: ['NET_ADMIN']
+        dns_opt: ['ndots:1']
         labels: 'bigboat.service.type': 'net'
         stop_signal: 'SIGKILL'
         volumes: ['/var/run/dnsreg:/var/run/dnsreg']

@@ -84,6 +84,7 @@ module.exports = (config) ->
         networks: appsnet: aliases: [serviceName]
         dns: ['10.25.55.2', '10.25.55.3']
         dns_search: subDomain
+        dns_opt: ['ndots:1']
         cap_add: ["NET_ADMIN"]
         labels: labels
         stop_signal: 'SIGKILL'
