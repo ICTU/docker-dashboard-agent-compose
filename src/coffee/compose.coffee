@@ -25,6 +25,14 @@ module.exports = (config) ->
       service.depends_on = deps
       delete service.links
 
+  _moveLinksToNetContainer: moveLinksToNetContainer = (serviceName, service, doc) ->
+    if service.links
+      links = for l in service.links
+        [srv, alias] = l.split ':'
+        alias = srv unless alias
+        "bb-net-#{srv}:#{alias}"
+      doc.services["bb-net-#{serviceName}"].links = links
+
   _resolvePath: resolvePath = (root, path) ->
     path = path[1...] if path[0] is '/'
     resolvep root, path
@@ -109,9 +117,10 @@ module.exports = (config) ->
   augmentCompose: (instance, options, doc) ->
     addDefaultNetwork doc
     for serviceName, service of doc.services
-      migrateLinksToDependsOn serviceName, service
       addExtraLabels serviceName, service
       addNetworkContainer serviceName, service, instance, doc
+      moveLinksToNetContainer serviceName, service, doc
+      migrateLinksToDependsOn serviceName, service
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
       addDockerMapping serviceName, service
