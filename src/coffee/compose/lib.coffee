@@ -40,9 +40,13 @@ module.exports =
   runCmd: (cmd, args, env, callbacks, exitCb) ->
     spawned = spawn cmd, args, env: (_.extend {}, process.env, env)
     if spawned.error
-      console.error "Error, unable to execute", cmd, args, pull.error
+      console.error "Error, unable to execute", cmd, args, spawned.error
     else
       console.log 'success', cmd, args
       spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
       spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
-      spawned.on 'close', exitCb
+      spawned.on 'close', () -> 
+        if spawned.exitCode == 0
+          exitCb()
+        else 
+          callbacks.stderr 'Something went wrong while pulling images.' if callbacks.stderr

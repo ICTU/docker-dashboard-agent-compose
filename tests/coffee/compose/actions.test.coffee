@@ -68,7 +68,7 @@ describe 'Compose Actions', ->
       captor.value()
       td.verify lib.runCmd 'docker-compose', ['-f', '/scriptPath', '-p', 'google-instance1', 'up', '-d', '--remove-orphans'], env, td.matchers.anything(), captor.capture()
       captor.value()
-
+      
   describe 'stop', ->
     it 'should stop an instance created from a docker compose file', ->
       captor = td.matchers.captor()

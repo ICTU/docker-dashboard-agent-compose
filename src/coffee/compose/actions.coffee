@@ -61,7 +61,7 @@ module.exports = (config) ->
 
     lib.ensureMkdir scriptDir, ->
       lib.writeFile scriptPath, compose, ->
-        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'pull'], env, {stdout: pullCb, stderr: emitLogCb}, (exitCode) ->
           args = _.concat ['-f', scriptPath, '-p', composeProjectName, 'up', '-d', '--remove-orphans'], netContainerNames
           lib.runCmd 'docker-compose', args, env, {stderr: emitLogCb}, ->
 
