@@ -191,8 +191,11 @@ describe 'Compose', ->
       doc = invokeTestSubject service
       assert.equal service.network_mode, 'service:bb-net-service1'
       assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
+
+      assert doc.services['bb-net-service1'].mac_address
       assert.deepEqual doc.services['bb-net-service1'],
         image: 'ictu/pipes:2'
+        mac_address: doc.services['bb-net-service1'].mac_address
         hostname: 'service1.instance2.google.com'
         networks: appsnet: aliases: ['service1']
         dns: ['10.25.55.2', '10.25.55.3']

@@ -1,6 +1,7 @@
 _         = require 'lodash'
 path      = require 'path'
 resolvep  = require 'resolve-path'
+randomMac = require 'random-mac'
 
 composeLib = require './compose/lib.coffee'
 
@@ -86,6 +87,7 @@ module.exports = (config) ->
         dns_search: subDomain
         dns_opt: ['ndots:1']
         cap_add: ["NET_ADMIN"]
+        mac_address: randomMac()
         labels: labels
         stop_signal: 'SIGKILL'
         volumes: ['/var/run/dnsreg:/var/run/dnsreg']
