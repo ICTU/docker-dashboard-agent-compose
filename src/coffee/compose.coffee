@@ -114,21 +114,35 @@ module.exports = (config) ->
 
     else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
 
+
+  _addNetworkSettings: addNetworkSettings = (serviceName, service, instance, doc) ->
+    subDomain = "#{instance}.#{config.domain}.#{config.tld}"
+    service.hostname = "#{serviceName}.#{subDomain}"
+    service.networks = ['public']
+    # service.dns = ['10.25.55.2', '10.25.55.3']
+    # service.dns_search = subDomain
+    delete service.network_mode
+
   _addDefaultNetwork: addDefaultNetwork = (doc) ->
-    doc.networks = appsnet: external: name: config.network.name
+    doc.networks = public: external: name: config.network.name
 
   augmentCompose: (instance, options, doc) ->
+    delete doc.networks
     addDefaultNetwork doc
     for serviceName, service of doc.services
       addExtraLabels serviceName, service
-      addNetworkContainer serviceName, service, instance, doc
-      moveLinksToNetContainer serviceName, service, doc
-      migrateLinksToDependsOn serviceName, service
+      addNetworkSettings serviceName, service, instance, doc
+
+      # addNetworkContainer serviceName, service, instance, doc
+      # moveLinksToNetContainer serviceName, service, doc
+      # migrateLinksToDependsOn serviceName, service
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
       addDockerMapping serviceName, service
       restrictCompose serviceName, service
 
-    doc.version = '2.1'
+      service.deploy = placement: constraints: ['node.hostname == swarm02']
+
+    doc.version = '3'
     delete doc.volumes
     doc

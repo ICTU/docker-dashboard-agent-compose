@@ -63,7 +63,7 @@ publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
 unless config.network.scanEnabled is 'false'
   config.network.scanCmd = env.assert 'NETWORK_SCAN_CMD'
 network = require('./src/js/network')(config, publishNetworkInfo)
-network.createProjectNet()
+# network.createProjectNet()
 network.scan() unless config.network.scanEnabled is 'false'
 
 unless config.dhcp.scanEnabled is 'false'

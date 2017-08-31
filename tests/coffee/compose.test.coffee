@@ -9,10 +9,10 @@ standardCfg =
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
-    it 'should set the compose version to 2.1', ->
+    it 'should set the compose version to 3', ->
       doc = version: '1.0'
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.equal doc.version, '2.1'
+      assert.equal doc.version, '3'
     it 'should delete the volumes section from the compose file', ->
       doc = volumes: {}
       assert.equal doc.volumes?, true
@@ -22,7 +22,7 @@ describe 'Compose', ->
       doc = networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.deepEqual doc.networks, appsnet: external: name: 'apps'
+      assert.deepEqual doc.networks, public: external: name: 'apps'
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
