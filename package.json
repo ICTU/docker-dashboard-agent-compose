@@ -25,6 +25,7 @@
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
     "mqtt": "^2.4.0",
+    "node-etcd": "^5.1.0",
     "os-monitor": "^1.0.5",
     "path": "^0.12.7",
     "random-mac": "0.0.4",
