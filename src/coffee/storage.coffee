@@ -26,7 +26,9 @@ module.exports = (agent, mqtt, config) ->
     targetpath = path.join '/', config.domain, name
     lockFile = path.join basePath, ".#{name}.delete.lock"
     fs.writeFile lockFile, "Deleting #{targetpath}...", ->
+      console.log "Deleting #{targetpath}..."
       lib.remoteFs config.remotefsUrl, 'rm', {dir: targetpath}, ->
+        console.log "#{targetpath} was successfully deleted"
         fs.unlink lockFile, callback
 
   agent.on '/storage/create', (params, {name, source}, callback) ->
@@ -35,7 +37,9 @@ module.exports = (agent, mqtt, config) ->
       targetpath = path.join '/', config.domain, name
       lockFile = path.join basePath, ".#{name}.copy.lock"
       fs.writeFile lockFile, "Copying #{srcpath} to #{targetpath}...", ->
+        console.log "Copying #{srcpath} to #{targetpath}..."
         lib.remoteFs config.remotefsUrl, 'cp', {source: srcpath, destination: targetpath}, ->
+          console.log "#{srcpath} was successfully copied to #{targetpath}"
           fs.unlink lockFile, callback
     else
       targetpath = path.join basePath, name

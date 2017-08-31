@@ -70,6 +70,7 @@ describe 'Storage/Lib', ->
       td.when(request({
         url: 'remoteFsUrl/fs/some-cmd'
         method: 'POST'
+        timeout: 3600000
         json: 'payload'}
       )).thenCallback null, null, 'mydata'
       lib.remoteFs 'remoteFsUrl', 'some-cmd', 'payload', cb

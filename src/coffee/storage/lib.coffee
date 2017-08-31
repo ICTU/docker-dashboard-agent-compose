@@ -29,6 +29,7 @@ module.exports =
       url: "#{remoteFsUrl}/fs/#{cmd}"
       method: 'POST'
       json: payload
+      timeout: 3600000 # timeout in an hour
       , (err, res, body) ->
         console.error err if err
         cb err, body
