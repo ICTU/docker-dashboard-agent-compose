@@ -64,16 +64,14 @@ describe 'Compose Actions', ->
       captor.value()
       td.verify lib.writeFile '/scriptPath', compose, captor.capture()
       captor.value()
-      td.verify lib.runCmd 'docker-compose', ['-f', '/scriptPath', '-p', 'google-instance1', 'pull'], env, td.matchers.anything(), captor.capture()
+      td.verify lib.runCmd 'docker', ['stack', 'up', '-c', '/scriptPath', '--prune', 'google-instance1'], env, td.matchers.anything(), captor.capture()
       captor.value()
-      td.verify lib.runCmd 'docker-compose', ['-f', '/scriptPath', '-p', 'google-instance1', 'up', '-d', '--remove-orphans'], env, td.matchers.anything(), captor.capture()
-      captor.value()
-      
+
   describe 'stop', ->
     it 'should stop an instance created from a docker compose file', ->
       captor = td.matchers.captor()
       td.when(lib.buildScriptPaths config, 'instance1').thenReturn ['/scriptDir', '/scriptPath']
       eventEmitter = actions.stop 'instance1', instanceCfg
       assert.equal eventEmitter.on?, true, 'Does not look like an EventEmitter'
-      td.verify lib.runCmd 'docker-compose', ['-f', '/scriptPath', '-p', 'google-instance1', 'down', '--remove-orphans'], env, td.matchers.anything(), captor.capture()
+      td.verify lib.runCmd 'docker', ['stack', 'down', 'google-instance1'], env, td.matchers.anything(), captor.capture()
       captor.value()
