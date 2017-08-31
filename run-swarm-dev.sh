@@ -10,7 +10,6 @@ DOMAIN=sandbox \
 TLD=swarm \
 SCRIPT_BASE_DIR=/local/data/scripts \
 DATA_DIR=/local/data \
-REMOTEFS_URL=http://10.19.88.248:8000 \
 NETWORK_NAME=swarm-net \
 NETWORK_SCAN_INTERVAL=60000 \
 NETWORK_SCAN_ENABLED=false \
