@@ -4,11 +4,13 @@ td      = require 'testdouble'
 fs = null
 storageLib = null
 storage = null
+watch = null
 
 describe 'Storage', ->
 
   beforeEach ->
     fs          = td.replace 'fs-extra'
+    watch       = td.replace 'node-watch'
     storageLib  = td.replace '../../src/coffee/storage/lib.coffee'
     storage     = require '../../src/coffee/storage.coffee'
 
@@ -126,7 +128,7 @@ describe 'Storage', ->
       domain: 'myDomain'
       docker: graph: path: '/docker/graph'
       datastore: scanEnabled: true
-    td.verify fs.watch '/rootDir/myDomain', captor.capture()
+    td.verify watch '/rootDir/myDomain', {recursive: false}, captor.capture()
     captor.value()
     td.verify storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain', captor.capture()
     captor.value null, 'some-buckets'

@@ -1,6 +1,8 @@
-fs            = require 'fs-extra'
-path          = require 'path'
-lib           = require './storage/lib.coffee'
+fs    = require 'fs-extra'
+path  = require 'path'
+watch = require 'node-watch'
+
+lib   = require './storage/lib.coffee'
 
 module.exports = (agent, mqtt, config) ->
 
@@ -14,7 +16,7 @@ module.exports = (agent, mqtt, config) ->
     lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/docker/graph', config.docker.graph.path)
 
     lib.listStorageBuckets fs, basePath, publishStorageBuckets
-    fs.watch basePath, (eventType, filename) ->
+    watch basePath, { recursive: false }, (eventType, filename) ->
       lib.listStorageBuckets fs, basePath, publishStorageBuckets
 
   agent.on '/storage/list', (params, data, callback) ->

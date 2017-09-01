@@ -1,6 +1,6 @@
 {
   "name": "docker-dashboard-agent-compose",
-  "version": "3.4.4",
+  "version": "3.4.5",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -21,6 +21,7 @@
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
     "mqtt": "^2.4.0",
+    "node-watch": "^0.5.5",
     "os-monitor": "^1.0.5",
     "path": "^0.12.7",
     "random-mac": "0.0.4",
