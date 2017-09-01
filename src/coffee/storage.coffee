@@ -29,9 +29,12 @@ module.exports = (agent, mqtt, config) ->
     lockFile = path.join basePath, ".#{name}.delete.lock"
     fs.writeFile lockFile, "Deleting #{targetpath}...", ->
       console.log "Deleting #{targetpath}..."
-      lib.remoteFs config.remotefsUrl, 'rm', {dir: targetpath}, ->
-        console.log "#{targetpath} was successfully deleted"
-        fs.unlink lockFile, callback
+      lib.remoteFs config.remotefsUrl, 'rm', {dir: targetpath}, (err) ->
+        unless err
+          console.log "#{targetpath} was successfully deleted"
+          fs.unlink lockFile, callback
+        else
+          callback err
 
   agent.on '/storage/create', (params, {name, source}, callback) ->
     if source
@@ -40,9 +43,12 @@ module.exports = (agent, mqtt, config) ->
       lockFile = path.join basePath, ".#{name}.copy.lock"
       fs.writeFile lockFile, "Copying #{srcpath} to #{targetpath}...", ->
         console.log "Copying #{srcpath} to #{targetpath}..."
-        lib.remoteFs config.remotefsUrl, 'cp', {source: srcpath, destination: targetpath}, ->
-          console.log "#{srcpath} was successfully copied to #{targetpath}"
-          fs.unlink lockFile, callback
+        lib.remoteFs config.remotefsUrl, 'cp', {source: srcpath, destination: targetpath}, (err) ->
+          unless err
+            console.log "#{srcpath} was successfully copied to #{targetpath}"
+            fs.unlink lockFile, callback
+          else
+            callback err
     else
       targetpath = path.join basePath, name
       console.log "Creating bucket #{targetpath}"
@@ -54,5 +60,8 @@ module.exports = (agent, mqtt, config) ->
     console.log "Retrieving size #{targetpath}"
     fs.writeFile lockFile, "Retrieving size #{targetpath} ...", ->
       lib.remoteFs config.remotefsUrl, 'du', {dir: targetpath}, (err, response) ->
-        fs.unlink lockFile, ->
-          callback null, { name: name, size: response.size}
+        unless err
+          fs.unlink lockFile, ->
+            callback null, { name: name, size: response.size}
+        else
+          callback err
