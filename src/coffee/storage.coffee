@@ -25,7 +25,7 @@ module.exports = (agent, mqtt, config) ->
       ignored: path.join basePath, '/*/**'
 
     ['addDir', 'unlinkDir'].map (e) -> chokidar.watch(basePath, opts).on e, listBucketsCb
-    chokidar.watch(path.join(basePath, '/.*'), opts).on 'unlink', listBucketsCb
+    ['add', 'unlink'].map (e) -> chokidar.watch(path.join(basePath, '/.*'), opts).on e, listBucketsCb
 
   agent.on '/storage/list', (params, data, callback) ->
     lib.listStorageBuckets fs, basePath, (err, buckets) ->

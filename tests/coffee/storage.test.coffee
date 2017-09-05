@@ -138,6 +138,7 @@ describe 'Storage', ->
       datastore: scanEnabled: true
     td.verify chokidarWatchOn 'addDir', td.matchers.isA Function
     td.verify chokidarWatchOn 'unlinkDir', td.matchers.isA Function
+    td.verify chokidarWatchOn 'add', td.matchers.isA Function
     td.verify chokidarWatchOn 'unlink', td.matchers.isA Function
     td.verify storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain', captor.capture()
     captor.value null, 'some-buckets'
