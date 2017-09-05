@@ -1,6 +1,6 @@
 fs    = require 'fs-extra'
 path  = require 'path'
-watch = require 'node-watch'
+chokidar = require 'chokidar'
 
 lib   = require './storage/lib.coffee'
 
@@ -15,9 +15,17 @@ module.exports = (agent, mqtt, config) ->
     lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/storage/size', config.dataDir)
     lib.runPeriodically lib.publishDataStoreUsage(mqtt, '/agent/docker/graph', config.docker.graph.path)
 
-    lib.listStorageBuckets fs, basePath, publishStorageBuckets
-    watch basePath, { recursive: false }, (eventType, filename) ->
+    listBucketsCb = (fileName, fileStats) ->
+      console.log "#{fileName} changed. Listing storage buckets..."
       lib.listStorageBuckets fs, basePath, publishStorageBuckets
+
+    listBucketsCb()
+    opts =
+      usePolling: true
+      ignored: path.join basePath, '/*/**'
+
+    ['addDir', 'unlinkDir'].map (e) -> chokidar.watch(basePath, opts).on e, listBucketsCb
+    chokidar.watch(path.join(basePath, '/.*'), opts).on 'unlink', listBucketsCb
 
   agent.on '/storage/list', (params, data, callback) ->
     lib.listStorageBuckets fs, basePath, (err, buckets) ->

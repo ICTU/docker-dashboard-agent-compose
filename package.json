@@ -1,18 +1,22 @@
 {
   "name": "docker-dashboard-agent-compose",
-  "version": "3.4.6",
+  "version": "3.4.7",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
-    "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
-    "test:watch": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
+    "start":
+      "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
+    "test":
+      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
+    "test:watch":
+      "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
+    "chokidar": "^1.7.0",
     "coffee-script": "^1.12.4",
     "docker-dashboard-agent-api": "^4.5.1",
     "forever": "^0.15.2",
@@ -21,7 +25,6 @@
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
     "mqtt": "^2.4.0",
-    "node-watch": "^0.5.5",
     "os-monitor": "^1.0.5",
     "path": "^0.12.7",
     "random-mac": "0.0.4",
