@@ -10,6 +10,8 @@ chokidarWatchOpts =
   usePolling: true
   ignored: "/rootDir/myDomain/*/**"
 
+chokidarWatchOn = td.function 'chokidar.watch.on'
+
 describe 'Storage', ->
 
   beforeEach ->
@@ -18,7 +20,7 @@ describe 'Storage', ->
     storageLib  = td.replace '../../src/coffee/storage/lib.coffee'
     storage     = require '../../src/coffee/storage.coffee'
     td.when(chokidar.watch(td.matchers.contains("/rootDir/myDomain"), chokidarWatchOpts)).thenReturn
-      on: td.function('chokidar.watch.on')
+      on: chokidarWatchOn
 
   afterEach -> td.reset()
 
@@ -134,6 +136,9 @@ describe 'Storage', ->
       domain: 'myDomain'
       docker: graph: path: '/docker/graph'
       datastore: scanEnabled: true
+    td.verify chokidarWatchOn 'addDir', td.matchers.isA Function
+    td.verify chokidarWatchOn 'unlinkDir', td.matchers.isA Function
+    td.verify chokidarWatchOn 'unlink', td.matchers.isA Function
     td.verify storageLib.listStorageBuckets argIsFs, '/rootDir/myDomain', captor.capture()
     captor.value null, 'some-buckets'
     td.verify mqtt.publish '/agent/storage/buckets', 'some-buckets'
