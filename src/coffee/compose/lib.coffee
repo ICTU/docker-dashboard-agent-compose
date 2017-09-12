@@ -43,10 +43,10 @@ module.exports =
       console.error "Error, unable to execute", cmd, args, spawned.error
     else
       console.log 'success', cmd, args
-      spawned.stdout.on 'data', callbacks.stdout if callbacks.stdout
-      spawned.stderr.on 'data', callbacks.stderr if callbacks.stderr
-      spawned.on 'close', () -> 
+      spawned.stdout.on 'data', callbacks.stdout if callbacks?.stdout
+      spawned.stderr.on 'data', callbacks.stderr if callbacks?.stderr
+      spawned.on 'close', () ->
         if spawned.exitCode == 0
           exitCb()
-        else 
+        else
           callbacks.stderr 'Something went wrong while starting the instance.' if callbacks.stderr
