@@ -4,19 +4,16 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":
-      "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
-    "test":
-      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
-    "test:watch":
-      "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
+    "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
+    "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
+    "test:html": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report html lcov",
+    "test:watch": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "chokidar": "^1.7.0",
     "coffee-script": "^1.12.4",
     "docker-dashboard-agent-api": "^4.5.1",
     "forever": "^0.15.2",

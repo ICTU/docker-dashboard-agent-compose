@@ -9,8 +9,8 @@ ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
 NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
 NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
-datastoreScanEnabled = env.get 'DATASTORE_SCAN_ENABLED', true
-if datastoreScanEnabled is 'false' then datastoreScanEnabled = false
+graphScanEnabled = env.get 'GRAPH_SCAN_ENABLED', true
+if graphScanEnabled is 'false' then graphScanEnabled = false
 
 config =
   domain: env.assert 'DOMAIN'
@@ -38,8 +38,8 @@ config =
     image: env.get 'NETWORK_IMAGE', 'ictu/pipes:2'
     startcheck:
       test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
-  datastore:
-    scanEnabled: datastoreScanEnabled
+  graph:
+    scanEnabled: graphScanEnabled
 
 if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
   config.net_container.healthcheck =
