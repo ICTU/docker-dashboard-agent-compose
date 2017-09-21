@@ -16,15 +16,5 @@ module.exports =
     client.on 'error', (err) -> console.log 'An error occured', err
     client.on 'close', -> console.log 'Connection closed'
 
-    client.subscribe '/docker/container/inspect'
-    client.on 'message', (topic, data) ->
-      info = JSON.parse data.toString()
-      ip = info?.NetworkSettings?.Networks?[config.network.name]?.IPAddress
-      if ip
-        lbls = info?.Config?.Labels
-        target = "#{lbls['bigboat.tld']}/#{lbls['bigboat.domain']}/#{lbls['bigboat.instance.name']}/#{lbls['bigboat.service.name']}"
-        etcd.set "/skydns/#{target}", JSON.stringify(host: ip), (err) ->
-          console.error err if err
-
     publish: (topic, data) ->
       client.publish topic, JSON.stringify data

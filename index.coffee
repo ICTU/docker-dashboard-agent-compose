@@ -28,7 +28,6 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
     name: env.assert 'NETWORK_NAME'
-    parentNic: env.assert 'NETWORK_PARENT_NIC'
     scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
     scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
   dhcp:
@@ -68,7 +67,6 @@ publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
 unless config.network.scanEnabled is 'false'
   config.network.scanCmd = env.assert 'NETWORK_SCAN_CMD'
 network = require('./src/js/network')(config, publishNetworkInfo)
-# network.createProjectNet()
 network.scan() unless config.network.scanEnabled is 'false'
 
 unless config.dhcp.scanEnabled is 'false'

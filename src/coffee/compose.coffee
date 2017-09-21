@@ -7,6 +7,7 @@ composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
   _restrictCompose: restrictCompose = (serviceName, service) ->
+    delete service.mem_limit
     delete service.cap_add
     delete service.cap_drop
     delete service.cgroup_parent
@@ -38,15 +39,12 @@ module.exports = (config) ->
     path = path[1...] if path[0] is '/'
     resolvep root, path
 
-  _addDockerMapping: addDockerMapping = (serviceName, service) ->
-    if service.labels?['bigboat.container.map_docker'] is 'true'
-      service.volumes = [] unless service.volumes
-      service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
-
   _addExtraLabels: addExtraLabels = (serviceName, service) ->
-    service.labels = _.extend {}, service.labels,
+    labels = _.extend {}, service.labels,
       'bigboat.domain': config.domain
       'bigboat.tld': config.tld
+    service.deploy = if service.deploy then service.deploy else {}
+    service.labels = service.deploy.labels = labels
 
   _addVolumeMapping: addVolumeMapping = (serviceName, service, options) ->
     bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
@@ -74,54 +72,22 @@ module.exports = (config) ->
     service.volumes = [] unless service.volumes
     service.volumes.push "/etc/localtime:/etc/localtime:ro"
 
-  _addNetworkContainer: addNetworkContainer = (serviceName, service, instance, doc) ->
-    if service.labels['bigboat.service.type'] in ['service', 'oneoff']
-      labels = _.extend {}, service.labels,
-        'bigboat.service.type': 'net'
-      subDomain = "#{instance}.#{config.domain}.#{config.tld}"
-      netcontainer =
-        image: config.net_container.image
-        hostname: "#{serviceName}.#{subDomain}"
-        networks: appsnet: aliases: [serviceName]
-        dns: ['10.25.55.2', '10.25.55.3']
-        dns_search: subDomain
-        dns_opt: ['ndots:1']
-        cap_add: ["NET_ADMIN"]
-        mac_address: randomMac()
-        labels: labels
-        stop_signal: 'SIGKILL'
-        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
-        restart: 'unless-stopped'
-      if config.net_container?.healthcheck
-        netcontainer.healthcheck = config.net_container.healthcheck
-
-      if service.container_name
-        netcontainer['container_name'] = "#{service.container_name}-net"
-
-      doc.services["bb-net-#{serviceName}"] = netcontainer
-      # remove the hostname if set in the service, the hostname is set from
-      # the network container
-      delete service.hostname
-      delete service.net
-      service.network_mode = "service:bb-net-#{serviceName}"
-
-      depends_on = composeLib.transformDependsOnToObject(service.depends_on) or {}
-      depends_on["bb-net-#{serviceName}"] = if netcontainer.healthcheck
-        condition: 'service_healthy'
-      else
-        condition: 'service_started'
-      service.depends_on = depends_on
-
-    else service.network_mode = "service:bb-net-#{service.labels['bigboat.service.name']}"
-
-
   _addNetworkSettings: addNetworkSettings = (serviceName, service, instance, doc) ->
     subDomain = "#{instance}.#{config.domain}.#{config.tld}"
     service.hostname = "#{serviceName}.#{subDomain}"
-    service.networks = ['public']
-    # service.dns = ['10.25.55.2', '10.25.55.3']
-    # service.dns_search = subDomain
+    service.networks = public: aliases: [service.hostname]
     delete service.network_mode
+
+  _addDeploymentSettings: addDeploymentSettings = (service) ->
+    defaultResources =
+      limits:
+        memory: '1G'
+    resources = _.merge defaultResources, service.deploy?.resources
+    service.deploy =
+      mode: 'replicated'
+      endpoint_mode: 'dnsrr'
+      resources: resources
+
 
   _addDefaultNetwork: addDefaultNetwork = (doc) ->
     doc.networks = public: external: name: config.network.name
@@ -130,19 +96,17 @@ module.exports = (config) ->
     delete doc.networks
     addDefaultNetwork doc
     for serviceName, service of doc.services
+      addDeploymentSettings service
       addExtraLabels serviceName, service
       addNetworkSettings serviceName, service, instance, doc
-
-      # addNetworkContainer serviceName, service, instance, doc
-      # moveLinksToNetContainer serviceName, service, doc
-      # migrateLinksToDependsOn serviceName, service
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
-      addDockerMapping serviceName, service
       restrictCompose serviceName, service
 
-      service.deploy = placement: constraints: ['node.hostname == swarm02']
+      # service.deploy = placement: constraints: ['node.hostname == swarm02']
 
-    doc.version = '3'
+    doc.version = '3.3'
     delete doc.volumes
+    console.log JSON.stringify doc, null, 2
+
     doc
