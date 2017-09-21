@@ -1,6 +1,6 @@
-FROM docker:1.12.6
+FROM docker:17.07
 
-RUN apk --update --no-cache add nmap nodejs coreutils 'py-pip==8.1.2-r0' && pip install 'docker-compose==1.14.0'
+RUN apk --update --no-cache add nmap nodejs-npm coreutils 'py-pip==9.0.1-r1' && pip install 'docker-compose==1.16.1'
 
 ADD . /app
 

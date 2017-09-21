@@ -9,10 +9,10 @@ standardCfg =
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
-    it 'should set the compose version to 3', ->
+    it 'should set the compose version to 3.3', ->
       doc = version: '1.0'
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.equal doc.version, '3'
+      assert.equal doc.version, '3.3'
     it 'should delete the volumes section from the compose file', ->
       doc = volumes: {}
       assert.equal doc.volumes?, true
@@ -107,26 +107,17 @@ describe 'Compose', ->
         compose(standardCfg)._resolvePath '/some/root/', '/../../.././one/level/up'
       , Error
 
-  describe '_addDockerMapping', ->
-    it 'should add a volume mapping to the docker socket only when the value of bigboat.container.map_docker label is true', ->
-      service =
-        volumes: ['existing_volume']
-        labels: 'bigboat.container.map_docker': 'true'
-      compose(standardCfg)._addDockerMapping '', service
-      assert.deepEqual service, Object.assign {volumes: ['existing_volume', '/var/run/docker.sock:/var/run/docker.sock']}, service
-    it 'should not do anything when the label is missing', ->
-      service = volumes: ['existing_volume']
-      compose(standardCfg)._addDockerMapping '', service
-      assert.deepEqual service, Object.assign {volumes: ['existing_volume']}, service
-
   describe '_addExtraLabels', ->
     it 'should add bigboat domain and tld labels based on configuration', ->
       service = labels: existing_label: 'value'
-      compose(Object.assign {}, standardCfg, {domain:'google', tld:'com'})._addExtraLabels '', service
-      assert.deepEqual service, labels:
+      labels =
         existing_label: 'value'
         'bigboat.domain': 'google'
         'bigboat.tld': 'com'
+      compose(Object.assign {}, standardCfg, {domain:'google', tld:'com'})._addExtraLabels '', service
+      assert.deepEqual service,
+        labels: labels
+        deploy: labels: labels
 
   describe '_addVolumeMapping', ->
     volumeTest = (inputVolume, expectedVolume, opts = {storageBucket: 'bucket1'}) ->
@@ -174,78 +165,3 @@ describe 'Compose', ->
       localtimeTest {}
     it 'should add /etc/localtime volume mapping when there are other volumes', ->
       localtimeTest volumes: ['volume1', '/mapped:/volume']
-
-  describe '_addNetworkContainer', ->
-    invokeTestSubject = (service, cfgNetContainer) ->
-      doc = services: {}
-      config = Object.assign {}, standardCfg,
-        domain: 'google'
-        tld: 'com'
-        net_container: Object.assign {}, standardCfg.net_container, cfgNetContainer
-      compose(config)._addNetworkContainer 'service1', service, 'instance2', doc
-      doc
-    containerTest = (serviceType) ->
-      service =
-        labels:
-          'bigboat.service.type': serviceType
-      doc = invokeTestSubject service
-      assert.equal service.network_mode, 'service:bb-net-service1'
-      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_started'
-
-      assert doc.services['bb-net-service1'].mac_address
-      assert.deepEqual doc.services['bb-net-service1'],
-        image: 'ictu/pipes:2'
-        mac_address: doc.services['bb-net-service1'].mac_address
-        hostname: 'service1.instance2.google.com'
-        networks: appsnet: aliases: ['service1']
-        dns: ['10.25.55.2', '10.25.55.3']
-        dns_search: 'instance2.google.com'
-        cap_add: ['NET_ADMIN']
-        dns_opt: ['ndots:1']
-        labels: 'bigboat.service.type': 'net'
-        stop_signal: 'SIGKILL'
-        volumes: ['/var/run/dnsreg:/var/run/dnsreg']
-        restart: 'unless-stopped'
-    it 'should add a network container for compose service of type \'service\'', ->
-      containerTest 'service'
-    it 'should add a network container for compose service of type \'oneoff\'', ->
-      containerTest 'oneoff'
-    it 'should inherit all labels from the service container, except the bigboat.service.type label', ->
-      service =
-        labels:
-          'bigboat.service.type': 'service'
-          some_other_label: 'value'
-      doc  = invokeTestSubject service
-      assert.deepEqual doc.services['bb-net-service1'].labels,
-        'bigboat.service.type': 'net'
-        some_other_label: 'value'
-
-    it 'should set the netcontainer healthcheck when configured', ->
-      service =
-        labels:
-          'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, healthcheck: 'some-check'
-      assert.equal doc.services['bb-net-service1'].healthcheck, 'some-check'
-      assert.deepEqual service.depends_on, 'bb-net-service1': condition: 'service_healthy'
-
-    it 'should use the container_name from the service, if any, to populate the netcontainer name', ->
-      service =
-        labels:
-          'bigboat.service.type': 'oneoff'
-        container_name: 'some-name'
-      doc = invokeTestSubject service
-      assert.equal doc.services['bb-net-service1'].container_name, 'some-name-net'
-
-    it 'should simply change the network_mode to use an existing netcontainer when the service type is anything other than service or oneoff', ->
-      service =
-        labels:
-          'bigboat.service.type': 'something-else'
-          'bigboat.service.name': 'myservice'
-      doc = invokeTestSubject service
-      assert.equal service.network_mode, 'service:bb-net-myservice'
-      assert.deepEqual doc, services: {}
-
-    it 'should use the provided network image version', ->
-      service = labels: 'bigboat.service.type': 'service'
-      doc = invokeTestSubject service, image: 'ictu/pipes:2'
-      assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'
