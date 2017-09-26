@@ -1,7 +1,7 @@
 fs            = require 'fs-extra'
 path          = require 'path'
 server        = require 'docker-dashboard-agent-api'
-Mqtt          = require './src/coffee/mqtt'
+Mqtt          = require 'bigboat-mqtt-client'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
@@ -17,10 +17,6 @@ config =
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
   remotefsUrl: env.assert 'REMOTEFS_URL'
-  mqtt:
-    url: env.assert 'MQTT_URL'
-    user: env.get 'MQTT_USER'
-    pass: env.get 'MQTT_PASS'
   docker:
     graph:
       path: env.get 'DOCKER_GRAPH_PATH', '/var/lib/docker'
@@ -59,7 +55,7 @@ catch err
 
 libcompose = (require './src/coffee/compose') config
 
-mqtt = Mqtt.connect config.mqtt
+mqtt = Mqtt()
 
 publishState = (instance, state) ->
   mqtt.publish '/instance/state', {instance: instance, state: state}
