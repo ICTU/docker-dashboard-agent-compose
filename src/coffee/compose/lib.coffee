@@ -49,4 +49,4 @@ module.exports =
         if spawned.exitCode == 0
           exitCb()
         else 
-          callbacks.stderr 'Something went wrong while pulling images.' if callbacks.stderr
+          callbacks.stderr 'Something went wrong while starting the instance.' if callbacks.stderr
