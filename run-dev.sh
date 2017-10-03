@@ -10,7 +10,6 @@ DOMAIN=acc \
 TLD=ictu \
 SCRIPT_BASE_DIR=/local/data/scripts \
 DATA_DIR=/local/data \
-REMOTEFS_URL=http://localhost:8000 \
 NETWORK_NAME=bigboat-apps-3080 \
 NETWORK_PARENT_NIC=eth0 \
 NETWORK_SCAN_INTERVAL=60000 \

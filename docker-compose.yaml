@@ -16,7 +16,6 @@ services:
       TLD: ictu
       SCRIPT_BASE_DIR: /local/data/scripts
       DATA_DIR: /local/data
-      REMOTEFS_URL: http://10.19.88.248:8000
       NETWORK_NAME: bigboat-apps
       NETWORK_HEALTHCHECK_INTERVAL: 2s
       NETWORK_HEALTHCHECK_TIMEOUT: 35s \

@@ -1,42 +1,41 @@
 assert  = require 'assert'
 td      = require 'testdouble'
 
-fs = null
 storageLib = null
 storage = null
+publish = null
+agent = null
+captor = null
 
 describe 'Storage', ->
 
   beforeEach ->
-    fs          = td.replace 'fs-extra'
     storageLib  = td.replace '../../src/coffee/storage/lib.coffee'
     storage     = require '../../src/coffee/storage.coffee'
+
+    publish = td.function('.publish')
+    td.when(storageLib.remoteFs("mqtt")).thenReturn publish
+
+    agent = td.object ['on']
+    captor = td.matchers.captor()
+    storage agent, "mqtt", {}
 
   afterEach -> td.reset()
 
   it 'should call remoteFS rm when when /storage/delete is invoked', ->
-    agent = td.object ['on']
-    captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/delete', captor.capture()
-    captor.value {name:'name1'}, null, 'mycallback'
-    td.verify storageLib.remoteFs 'remotefsUrl', 'rm', {name:'name1'}, 'mycallback'
+    captor.value {name:'name1'}
+    td.verify publish 'delete', {name:'name1'}
 
   it 'should create a new storage bucket when /storage/create is invoked', ->
-    agent = td.object ['on']
-    captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/create', captor.capture()
-    captor.value null, {name: 'bucket1'}, 'mycallback'
-    td.verify storageLib.remoteFs 'remotefsUrl', 'mk', {name: 'bucket1'}, 'mycallback'
+    captor.value 'create', {name:'name1'}
+    td.verify publish 'create', {name:'name1'}
 
   it 'should create new storage bucket by copying an existing bucket when /storage/create with source parameter is invoked', ->
-    agent = td.object ['on']
-    captor = td.matchers.captor()
-    storage agent, null, dataDir: '/rootDir', domain: 'myDomain', remotefsUrl: 'remotefsUrl', docker: graph: path: '/docker/graph'
     td.verify agent.on '/storage/create', captor.capture()
-    captor.value null, {name: 'bucket1', source: 'src1'}, 'mycallback'
-    td.verify storageLib.remoteFs 'remotefsUrl', 'cp', {destination: 'bucket1', source: 'src1'}, 'mycallback'
+    captor.value 'copy', {name: 'bucket1', source: 'src1'}
+    td.verify publish 'copy', {destination: 'bucket1', source: 'src1'}
 
   it 'should periodically publish docker graph statistics to mqtt if data store scan is enabled', ->
     agent = td.object ['on']

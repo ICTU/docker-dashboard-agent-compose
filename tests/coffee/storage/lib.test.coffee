@@ -1,6 +1,5 @@
 assert   = require 'assert'
 td       = require 'testdouble'
-request  = td.replace 'request'
 exec     = td.replace('child_process').exec
 lib      = require '../../../src/coffee/storage/lib.coffee'
 
@@ -9,16 +8,11 @@ describe 'Storage/Lib', ->
   after -> td.reset()
 
   describe 'remoteFs', ->
-    it 'should call the remoteFs endpoint with the desired command and return its response to the caller', ->
-      cb = td.function()
-      td.when(request({
-        url: 'remoteFsUrl/fs/some-cmd'
-        method: 'POST'
-        timeout: 3600000
-        json: 'payload'}
-      )).thenCallback null, null, 'mydata'
-      lib.remoteFs 'remoteFsUrl', 'some-cmd', 'payload', cb
-      td.verify cb null, 'mydata'
+    it 'should send the correct command over MQTT', ->
+      mqtt = td.object ['publish']
+      data = some: 'thing'
+      lib.remoteFs(mqtt) 'cmd', data
+      td.verify mqtt.publish '/commands/remotefs/cmd', data, {retain: false}
 
   describe 'publishDataStoreUsage', ->
     it 'should publish store usage details', ->

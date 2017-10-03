@@ -8,5 +8,4 @@ set TLD=ictu& ^
 set SCRIPT_BASE_DIR=X:\mnt\data\scripts& ^
 set DATA_DIR=X:\mnt\data& ^
 set PIPEWORKS_CMD=eth0 -i eth0 @CONTAINER_NAME@ dhclient& ^
-set REMOTEFS_URL=http://10.25.161.250:8000& ^
 nodemon index.coffee

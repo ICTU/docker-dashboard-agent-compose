@@ -1,7 +1,7 @@
 fs            = require 'fs-extra'
 path          = require 'path'
 server        = require 'docker-dashboard-agent-api'
-Mqtt          = require 'bigboat-mqtt-client'
+Mqtt          = require '@bigboat/mqtt-client'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
 
@@ -16,7 +16,6 @@ config =
   domain: env.assert 'DOMAIN'
   tld: env.assert 'TLD'
   dataDir: env.assert 'DATA_DIR'
-  remotefsUrl: env.assert 'REMOTEFS_URL'
   docker:
     graph:
       path: env.get 'DOCKER_GRAPH_PATH', '/var/lib/docker'
