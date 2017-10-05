@@ -12,7 +12,7 @@ describe 'Storage/Lib', ->
       mqtt = td.object ['publish']
       data = some: 'thing'
       lib.remoteFs(mqtt) 'cmd', data
-      td.verify mqtt.publish '/commands/remotefs/cmd', data, {retain: false}
+      td.verify mqtt.publish '/commands/remotefs/cmd', data, {retain: false, qos: 2}
 
   describe 'publishDataStoreUsage', ->
     it 'should publish store usage details', ->
