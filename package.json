@@ -14,7 +14,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@bigboat/mqtt-client": "^1.0.0",
+    "@bigboat/mqtt-client": "^1.1.0",
     "coffee-script": "^1.12.4",
     "docker-dashboard-agent-api": "^4.5.1",
     "forever": "^0.15.2",
