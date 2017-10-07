@@ -12,7 +12,7 @@ shell.config.silent = true
 
 module.exports = (config) ->
 
-  composeProject = (instance) -> "#{config.domain}-#{instance}"
+  composeProject = (instance) -> "#{config.domain}-#{instance}".replace '.', '-'
 
   config: (instance, compose, data, cb) ->
     lib.saveScript config, 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath) ->
