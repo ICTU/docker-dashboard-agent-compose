@@ -98,13 +98,13 @@ module.exports = (config) ->
       emitCbCalled = true
       eventEmitter.emit 'teardown-log', data.toString()
 
-    lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+    lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', composeProjectName, 'down', '-v', '--remove-orphans'], env, {stderr: emitLogCb}, ->
       if emitCbCalled
         console.log 'Done, stopped', composeProjectName
       else
         # TODO: this fallback mechanism should be removed in future versions (e.g. v + 10), current(v)=2.0.1
         console.log "#{composeProjectName} did not stop, falling back on old stop behavior based on instance name only"
-        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '--remove-orphans'], env, {stderr: emitLogCb}, ->
+        lib.runCmd 'docker-compose', ['-f', scriptPath, '-p', instance, 'down', '-v', '--remove-orphans'], env, {stderr: emitLogCb}, ->
           console.log 'Done, stopped', composeProjectName
 
     eventEmitter
