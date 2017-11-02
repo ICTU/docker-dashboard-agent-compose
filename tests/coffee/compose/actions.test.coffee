@@ -64,7 +64,7 @@ describe 'Compose Actions', ->
       captor.value()
       td.verify lib.writeFile '/scriptPath', compose, captor.capture()
       captor.value()
-      td.verify lib.runCmd 'docker', ['stack', 'up', '-c', '/scriptPath', '--prune', 'google-instance1'], env, td.matchers.anything(), captor.capture()
+      td.verify lib.runCmd 'docker', ['stack', 'up', '-c', '/scriptPath', '--prune', '--resolve-image=always', 'google-instance1'], env, td.matchers.anything(), captor.capture()
       captor.value()
 
   describe 'stop', ->

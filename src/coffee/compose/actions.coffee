@@ -62,7 +62,7 @@ module.exports = (config) ->
     lib.ensureMkdir scriptDir, ->
       lib.writeFile scriptPath, compose, ->
         console.log 'Starting', composeProjectName, 'from file', scriptPath
-        args = ['stack', 'up', '-c', scriptPath, '--prune', composeProjectName]
+        args = ['stack', 'up', '-c', scriptPath, '--prune', '--resolve-image=always', composeProjectName]
         lib.runCmd 'docker', args, env, {stderr: emitLogCb, stdout: emitLogCb}, ->
           console.log 'Starting', composeProjectName
     eventEmitter
