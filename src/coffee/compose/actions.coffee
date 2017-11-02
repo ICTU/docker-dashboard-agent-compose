@@ -28,14 +28,6 @@ module.exports = (config) ->
     [scriptDir, scriptPath] = lib.buildScriptPaths config, instance
     composeProjectName = composeProject instance
 
-    pullCb = (data) ->
-      data = data.toString()
-      if m = data.match /(.+): Pulling from (.+)/i
-        [all, version, image] = m
-        eventEmitter.emit 'pulling', {image: image, version: version}
-      else console.log 'pull output unknown', data
-    upCb = (data) -> console.log 'UP', data.toString()
-
     env = buildEnv config, data
 
     emitLogCb = (data) -> eventEmitter.emit 'startup-log', data.toString()
