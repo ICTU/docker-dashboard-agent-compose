@@ -22,7 +22,9 @@ describe 'Compose', ->
       doc = networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.deepEqual doc.networks, public: external: name: 'apps'
+      assert.deepEqual doc.networks,
+        private: null
+        public: external: name: 'apps'
 
   describe '_restrictCompose', ->
     it 'should drop certain service capabilities', ->
@@ -39,56 +41,6 @@ describe 'Compose', ->
         this_is_not_dropped: 1
       compose(standardCfg)._restrictCompose '', service
       assert.deepEqual service, this_is_not_dropped: 1
-
-  describe '_moveLinksToNetContainer', ->
-    it 'should leave the document untouched when there are no links', ->
-      doc = services: www: image: 'someimage'
-      compose(standardCfg)._moveLinksToNetContainer 'www', doc.services.www, doc
-      assert.deepEqual doc, services: www: image: 'someimage'
-    it 'should move all links to links between net containers', ->
-      doc =
-        services:
-          'bb-net-myservice': {}
-          myservice:
-            links: ['db', "service:alias"]
-      compose(standardCfg)._moveLinksToNetContainer 'myservice', doc.services.myservice, doc
-      assert.deepEqual doc.services['bb-net-myservice'],
-        links: [
-          'bb-net-db:db'
-          'bb-net-service:alias'
-        ]
-
-  describe '_migrateLinksToDependsOn', ->
-    it 'should leave the document untouched when there are no links', ->
-      doc = services: www: image: 'someimage'
-      compose(standardCfg)._migrateLinksToDependsOn '', doc
-      assert.deepEqual doc, services: www: image: 'someimage'
-    it 'should merge all links with all depends_on (as list) services', ->
-      service =
-        links: ['db']
-        depends_on: ['some_other_service']
-      compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service,
-        depends_on:
-          db: {condition: 'service_started'}
-          some_other_service: {condition: 'service_started'}
-    it 'should merge all links with all depends_on (as object) services', ->
-      service =
-        links: ['db']
-        depends_on: some_other_service: condition: 'some_condition'
-      compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service,
-        depends_on:
-          db: {condition: 'service_started'}
-          some_other_service: {condition: 'some_condition'}
-    it 'should prefer a dependency from depends_on over one from links if they are the same', ->
-      service =
-        links: ['db']
-        depends_on: db: condition: 'my_specific_condition'
-      compose(standardCfg)._migrateLinksToDependsOn '', service
-      assert.deepEqual service,
-        depends_on:
-          db: {condition: 'my_specific_condition'}
 
   describe '_resolvePath', ->
     it 'should resolve a path relative to a given root', ->

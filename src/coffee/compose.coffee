@@ -18,23 +18,6 @@ module.exports = (config) ->
     delete service.privileged
     delete service.tmpfs
 
-  _migrateLinksToDependsOn: migrateLinksToDependsOn = (serviceName, service) ->
-    if service.links
-      links = (service.links.map (l) -> l.split(':')[0])
-      deps = composeLib.transformDependsOnToObject(service.depends_on) or {}
-      for l in links
-        deps[l] = condition: 'service_started' unless deps[l]
-      service.depends_on = deps
-      delete service.links
-
-  _moveLinksToNetContainer: moveLinksToNetContainer = (serviceName, service, doc) ->
-    if service.links
-      links = for l in service.links
-        [srv, alias] = l.split ':'
-        alias = srv unless alias
-        "bb-net-#{srv}:#{alias}"
-      doc.services["bb-net-#{serviceName}"].links = links
-
   _resolvePath: resolvePath = (root, path) ->
     path = path[1...] if path[0] is '/'
     resolvep root, path
@@ -75,7 +58,9 @@ module.exports = (config) ->
   _addNetworkSettings: addNetworkSettings = (serviceName, service, instance, doc) ->
     subDomain = "#{instance}.#{config.domain}.#{config.tld}"
     service.hostname = "#{serviceName}.#{subDomain}"
-    service.networks = public: aliases: [service.hostname]
+    service.networks =
+      public: aliases: [service.hostname]
+      private: null
     delete service.network_mode
 
   _addDeploymentSettings: addDeploymentSettings = (service) ->
@@ -88,13 +73,14 @@ module.exports = (config) ->
       endpoint_mode: 'dnsrr'
       resources: resources
 
-
-  _addDefaultNetwork: addDefaultNetwork = (doc) ->
-    doc.networks = public: external: name: config.network.name
+  _addNetworks: addNetworks = (doc) ->
+    doc.networks =
+      private: null
+      public: external: name: config.network.name
 
   augmentCompose: (instance, options, doc) ->
     delete doc.networks
-    addDefaultNetwork doc
+    addNetworks doc
     for serviceName, service of doc.services
       addDeploymentSettings service
       addExtraLabels serviceName, service
@@ -102,8 +88,6 @@ module.exports = (config) ->
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
       restrictCompose serviceName, service
-
-      # service.deploy = placement: constraints: ['node.hostname == swarm02']
 
     doc.version = '3.3'
     delete doc.volumes
