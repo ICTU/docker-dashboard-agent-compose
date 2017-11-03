@@ -58,9 +58,8 @@ module.exports = (config) ->
   _addNetworkSettings: addNetworkSettings = (serviceName, service, instance, doc) ->
     subDomain = "#{instance}.#{config.domain}.#{config.tld}"
     service.hostname = "#{serviceName}.#{subDomain}"
-    service.networks =
-      public: aliases: [service.hostname]
-      private: null
+    service.networks = public: aliases: [service.hostname]
+    service.networks.private = null if doc.services and Object.keys(doc.services)?.length > 1
     delete service.network_mode
 
   _addDeploymentSettings: addDeploymentSettings = (service) ->
@@ -74,12 +73,10 @@ module.exports = (config) ->
       resources: resources
 
   _addNetworks: addNetworks = (doc) ->
-    doc.networks =
-      private: null
-      public: external: name: config.network.name
+    doc.networks = public: external: name: config.network.name
+    doc.networks.private = null if doc.services and Object.keys(doc.services)?.length > 1
 
   augmentCompose: (instance, options, doc) ->
-    delete doc.networks
     addNetworks doc
     for serviceName, service of doc.services
       addDeploymentSettings service

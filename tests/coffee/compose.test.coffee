@@ -10,7 +10,9 @@ standardCfg =
 describe 'Compose', ->
   describe 'augmentCompose', ->
     it 'should set the compose version to 3.3', ->
-      doc = version: '1.0'
+      doc =
+        version: '1.0'
+        services: {}
       compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.version, '3.3'
     it 'should delete the volumes section from the compose file', ->
@@ -18,8 +20,20 @@ describe 'Compose', ->
       assert.equal doc.volumes?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.equal doc.volumes?, false
-    it 'should set the default network in the compose file', ->
-      doc = networks: {}
+    it 'should set only public network if there is only 1 service', ->
+      doc =
+        services: www: image: 'nginx'
+        networks: {}
+      assert.equal doc.networks?, true
+      compose(standardCfg).augmentCompose '', {}, doc
+      assert.deepEqual doc.networks,
+        public: external: name: 'apps'
+    it 'should set public and private networks if there is more than 1 service', ->
+      doc =
+        services:
+          www: image: 'nginx'
+          db: image: 'postgres'
+        networks: {}
       assert.equal doc.networks?, true
       compose(standardCfg).augmentCompose '', {}, doc
       assert.deepEqual doc.networks,
