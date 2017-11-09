@@ -66,15 +66,20 @@ module.exports = (config) ->
     defaultResources =
       limits:
         memory: '1G'
-    resources = _.merge defaultResources, service.deploy?.resources
-    service.deploy =
+    service.deploy = _.merge {},
       mode: 'replicated'
       endpoint_mode: 'dnsrr'
-      resources: resources
+      resources: defaultResources
+    , service.deploy
 
   _addNetworks: addNetworks = (doc) ->
     doc.networks = public: external: name: config.network.name
     doc.networks.private = null if doc.services and Object.keys(doc.services)?.length > 1
+
+  _addDockerMapping: addDockerMapping = (serviceName, service) ->
+    if service.labels?['bigboat.container.map_docker'] is 'true'
+      service.volumes = [] unless service.volumes
+      service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
 
   augmentCompose: (instance, options, doc) ->
     addNetworks doc
@@ -84,6 +89,7 @@ module.exports = (config) ->
       addNetworkSettings serviceName, service, instance, doc
       addVolumeMapping serviceName, service, options
       addLocaltimeMapping serviceName, service
+      addDockerMapping serviceName, service
       restrictCompose serviceName, service
 
     doc.version = '3.3'
