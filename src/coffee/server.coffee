@@ -40,11 +40,7 @@ module.exports = (agentInfo, {httpPort, authToken}) ->
   app.get '/auth-ping', authenticate, sendPong
 
   app.get '/version', (req, res) ->
-    obj =
-      api: (require '../../package.json').version
-      agent: agentInfo
-
-    res.end JSON.stringify obj
+    res.end JSON.stringify agentInfo
 
   server = app.listen httpPort, ->
     host = server.address().address
