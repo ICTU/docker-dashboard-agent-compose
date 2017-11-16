@@ -4,14 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":
-      "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
-    "test":
-      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
-    "test:html":
-      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report html lcov",
-    "test:watch":
-      "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
+    "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
+    "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
+    "test:html": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report html lcov",
+    "test:watch": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
@@ -19,19 +15,20 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@bigboat/mqtt-client": "^1.1.0",
+    "body-parser": "~1.14.1",
     "coffee-script": "^1.12.4",
-    "docker-dashboard-agent-api": "^4.5.1",
     "forever": "^0.15.2",
+    "express": "~4.13.3",
     "fs-extra": "^0.30.0",
     "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
     "mkdirp": "^0.5.1",
     "os-monitor": "^1.0.5",
+    "passport": "^0.3.2",
+    "passport-token-auth": "^0.1.2",
     "path": "^0.12.7",
-    "random-mac": "0.0.4",
     "resolve-path": "^1.3.3",
-    "shelljs": "^0.7.7",
-    "ws": "^1.1.1"
+    "shelljs": "^0.7.7"
   },
   "devDependencies": {
     "coffee-coverage": "^2.0.1",

@@ -1,13 +1,9 @@
 fs            = require 'fs-extra'
 path          = require 'path'
-server        = require 'docker-dashboard-agent-api'
 Mqtt          = require '@bigboat/mqtt-client'
+server        = require './src/coffee/server'
 env           = require './src/coffee/env'
 packageJson   = require './package.json'
-
-ENABLE_NETWORK_HEALTHCHECK = env.get 'ENABLE_NETWORK_HEALTHCHECK', false
-NETWORK_HEALTHCHECK_TEST_INTERFACE = env.get 'NETWORK_HEALTHCHECK_TEST_INTERFACE', 'eth0'
-NETWORK_HEALTHCHECK_TEST_IP_PREFIX = env.get 'NETWORK_HEALTHCHECK_TEST_IP_PREFIX', '10.25'
 
 graphScanEnabled = env.get 'GRAPH_SCAN_ENABLED', true
 if graphScanEnabled is 'false' then graphScanEnabled = false
@@ -23,24 +19,14 @@ config =
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:
     name: env.assert 'NETWORK_NAME'
-    scanEnabled: env.get 'NETWORK_SCAN_ENABLED', 'true'
-    scanInterval: parseInt(env.get 'NETWORK_SCAN_INTERVAL', '60000')
-  dhcp:
-    scanInterval: parseInt(env.get 'DHCP_SCAN_INTERVAL', '5000')
-    scanEnabled: env.get 'DHCP_SCAN_ENABLED', 'true'
-  net_container:
-    image: env.get 'NETWORK_IMAGE', 'ictu/pipes:2'
-    startcheck:
-      test: "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
   graph:
     scanEnabled: graphScanEnabled
+  httpPort: process.env.HTTP_PORT or 80
+  authToken: process.env.AUTH_TOKEN
 
-if ENABLE_NETWORK_HEALTHCHECK and ENABLE_NETWORK_HEALTHCHECK isnt 'false'
-  config.net_container.healthcheck =
-      test: env.get 'NETWORK_HEALTHCHECK_TEST', "ifconfig #{NETWORK_HEALTHCHECK_TEST_INTERFACE} | grep inet | grep #{NETWORK_HEALTHCHECK_TEST_IP_PREFIX}"
-      interval:  env.get 'NETWORK_HEALTHCHECK_INTERVAL', '30s'
-      timeout: env.get 'NETWORK_HEALTHCHECK_TIMEOUT', '5s'
-      retries: parseInt(env.get 'NETWORK_HEALTHCHECK_RETRIES', 4)
+unless config.authToken
+  console.error "AUTH_TOKEN is required!"
+  process.exit 1
 
 console.log 'Config \n\n', config, '\n\n'
 
@@ -55,19 +41,6 @@ libcompose = (require './src/coffee/compose') config
 
 mqtt = Mqtt()
 
-publishState = (instance, state) ->
-  mqtt.publish '/instance/state', {instance: instance, state: state}
-
-publishNetworkInfo = (data) -> mqtt.publish '/network/info', data
-unless config.network.scanEnabled is 'false'
-  config.network.scanCmd = env.assert 'NETWORK_SCAN_CMD'
-network = require('./src/js/network')(config, publishNetworkInfo)
-network.scan() unless config.network.scanEnabled is 'false'
-
-unless config.dhcp.scanEnabled is 'false'
-  publishDhcpInfo = (data) -> mqtt.publish '/dhcp/info', data
-  (require './src/js/dhcp') config, publishDhcpInfo
-
 publishSystemMem = (data) -> mqtt.publish '/system/memory', data
 publishSystemUptime = (data) -> mqtt.publish '/system/uptime', data
 publishSystemCpu = (data) -> mqtt.publish '/system/cpu', data
@@ -75,7 +48,7 @@ require('./src/js/os-monitor')(publishSystemMem, publishSystemUptime, publishSys
 
 compose = require('./src/coffee/compose/actions') config
 
-agent = server.agent name: packageJson.name , version: packageJson.version
+agent = server {name: packageJson.name , version: packageJson.version}, config
 agent.on 'start', (data) ->
   instanceName = data.instance.name
   options = data.instance.options

@@ -1,7 +1,6 @@
 _         = require 'lodash'
 path      = require 'path'
 resolvep  = require 'resolve-path'
-randomMac = require 'random-mac'
 
 composeLib = require './compose/lib.coffee'
 
