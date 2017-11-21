@@ -53,7 +53,7 @@ describe 'Compose', ->
         privileged: 1
         tmpfs: 1
         this_is_not_dropped: 1
-      compose(standardCfg)._restrictCompose '', service
+      compose(standardCfg)._restrictCompose service
       assert.deepEqual service, this_is_not_dropped: 1
 
   describe '_resolvePath', ->
@@ -80,7 +80,7 @@ describe 'Compose', ->
         existing_label: 'value'
         'bigboat.domain': 'google'
         'bigboat.tld': 'com'
-      compose(Object.assign {}, standardCfg, {domain:'google', tld:'com'})._addExtraLabels '', service
+      compose(Object.assign {}, standardCfg, {domain:'google', tld:'com'})._addExtraLabels service
       assert.deepEqual service,
         labels: labels
         deploy: labels: labels
@@ -89,7 +89,7 @@ describe 'Compose', ->
     volumeTest = (inputVolume, expectedVolume, opts = {storageBucket: 'bucket1'}) ->
       c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = volumes: [inputVolume]
-      c._addVolumeMapping '', service, opts
+      c._addVolumeMapping service, opts
       assert.deepEqual service, volumes: [expectedVolume]
     it 'should root a volume to a base path (data bucket)', ->
       volumeTest '/my/mapping:/internal/volume', '/local/data/google/bucket1/my/mapping:/internal/volume'
@@ -112,18 +112,18 @@ describe 'Compose', ->
     it 'should discard a volume with a mapping that resolves outside of the bucket root', ->
       c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = volumes: ['../../my-malicious-volume/:/internal']
-      c._addVolumeMapping '', service, storageBucket: 'bucket1'
+      c._addVolumeMapping service, storageBucket: 'bucket1'
       assert.deepEqual service, volumes: []
     it 'should not create invalid volume section', ->
       c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
       service = image: 'something'
-      c._addVolumeMapping '', service, {storageBucket: 'bucket1'}
+      c._addVolumeMapping service, {storageBucket: 'bucket1'}
       assert.deepEqual service, image: 'something'
 
   describe '_addLocaltimeMapping', ->
     localtimeTest = (service) ->
       c = compose Object.assign {}, standardCfg, dataDir: '/local/data/', domain: 'google'
-      c._addLocaltimeMapping '', service
+      c._addLocaltimeMapping service
       expected = service.volumes or []
       expected.push '/etc/localtime:/etc/localtime:ro'
       assert.deepEqual service, volumes: expected

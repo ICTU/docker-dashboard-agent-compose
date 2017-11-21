@@ -5,7 +5,7 @@ resolvep  = require 'resolve-path'
 composeLib = require './compose/lib.coffee'
 
 module.exports = (config) ->
-  _restrictCompose: restrictCompose = (serviceName, service) ->
+  _restrictCompose: restrictCompose = (service) ->
     delete service.mem_limit
     delete service.cap_add
     delete service.cap_drop
@@ -21,14 +21,14 @@ module.exports = (config) ->
     path = path[1...] if path[0] is '/'
     resolvep root, path
 
-  _addExtraLabels: addExtraLabels = (serviceName, service) ->
+  _addExtraLabels: addExtraLabels = (service) ->
     labels = _.extend {}, service.labels,
       'bigboat.domain': config.domain
       'bigboat.tld': config.tld
     service.deploy = if service.deploy then service.deploy else {}
     service.labels = service.deploy.labels = labels
 
-  _addVolumeMapping: addVolumeMapping = (serviceName, service, options) ->
+  _addVolumeMapping: addVolumeMapping = (service, options) ->
     bucketPath = path.join config.dataDir, config.domain, options.storageBucket if options.storageBucket
     service.volumes = service.volumes?.map (v) ->
       vsplit = v.split ':'
@@ -50,7 +50,7 @@ module.exports = (config) ->
     delete service.volumes unless service.volumes
     service.volumes = service.volumes.filter((s) -> s) if service.volumes
 
-  _addLocaltimeMapping: addLocaltimeMapping = (serviceName, service) ->
+  _addLocaltimeMapping: addLocaltimeMapping = (service) ->
     service.volumes = [] unless service.volumes
     service.volumes.push "/etc/localtime:/etc/localtime:ro"
 
@@ -75,7 +75,7 @@ module.exports = (config) ->
     doc.networks = public: external: name: config.network.name
     doc.networks.private = null if doc.services and Object.keys(doc.services)?.length > 1
 
-  _addDockerMapping: addDockerMapping = (serviceName, service) ->
+  _addDockerMapping: addDockerMapping = (service) ->
     if service.labels?['bigboat.container.map_docker'] is 'true'
       service.volumes = [] unless service.volumes
       service.volumes.push '/var/run/docker.sock:/var/run/docker.sock'
@@ -84,15 +84,15 @@ module.exports = (config) ->
     addNetworks doc
     for serviceName, service of doc.services
       addDeploymentSettings service
-      addExtraLabels serviceName, service
+      addExtraLabels service
       addNetworkSettings serviceName, service, instance, doc
-      addVolumeMapping serviceName, service, options
-      addLocaltimeMapping serviceName, service
-      addDockerMapping serviceName, service
-      restrictCompose serviceName, service
+      addVolumeMapping service, options
+      addLocaltimeMapping service
+      addDockerMapping service
+      restrictCompose service
 
     doc.version = '3.3'
     delete doc.volumes
-    console.log JSON.stringify doc, null, 2
+    # console.log JSON.stringify doc, null, 2
 
     doc
