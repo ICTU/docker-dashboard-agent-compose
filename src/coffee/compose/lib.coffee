@@ -23,7 +23,11 @@ module.exports =
     scriptPath
 
   buildScriptPaths: buildScriptPaths = (config, instance) ->
-    [scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}", "#{scriptDir}/docker-compose.yml"]
+    [
+      scriptDir = "#{config.compose.scriptBaseDir}/#{config.domain}/#{instance}"
+      "#{scriptDir}/docker-compose.yml"
+      "#{scriptDir}/docker-compose-with-ssh.yml"
+    ]
 
   ensureMkdir: ensureMkdir = (scriptDir, success) ->
     mkdirp scriptDir, (err) ->
@@ -35,7 +39,7 @@ module.exports =
   writeFile: writeFile = (path, contents, success) ->
     fs.writeFile path, contents, (err) ->
       if err then console.error 'Error writing file', err
-      else success null, path
+      else success? null, path
 
   runCmd: (cmd, args, env, callbacks, exitCb) ->
     spawned = spawn cmd, args, env: (_.extend {}, process.env, env)

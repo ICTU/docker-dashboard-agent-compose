@@ -6,12 +6,12 @@ shell  = require 'shelljs'
 _      = require 'lodash'
 
 lib    = require './lib.coffee'
+ssh    = require './ssh'
 
 shell.config.verbose = false
 shell.config.silent = true
 
 module.exports = (config) ->
-
   composeProject = (instance) -> "#{config.domain}-#{instance}".replace '.', '-'
 
   config: (instance, compose, data, cb) ->
@@ -25,7 +25,7 @@ module.exports = (config) ->
   start: (instance, composition, data) ->
     eventEmitter = new events.EventEmitter()
     compose = yaml.safeDump composition
-    [scriptDir, scriptPath] = lib.buildScriptPaths config, instance
+    [scriptDir, scriptPath, scriptWithSshPath] = lib.buildScriptPaths config, instance
     composeProjectName = composeProject instance
 
     env = buildEnv config, data
@@ -48,15 +48,35 @@ module.exports = (config) ->
       catch err
         console.log('Error while creating volume dir', err) unless err.code is 'EEXIST'
 
-    netContainerNames = _.filter _.keys(composition.services), (serviceName) -> serviceName.match /^bb\-net/
-    serviceContainerNames = _.difference _.keys(composition.services), netContainerNames
-
     lib.ensureMkdir scriptDir, ->
       lib.writeFile scriptPath, compose, ->
         console.log 'Starting', composeProjectName, 'from file', scriptPath
         args = ['stack', 'up', '-c', scriptPath, '--prune', '--resolve-image=always', composeProjectName]
         lib.runCmd 'docker', args, env, {stderr: emitLogCb, stdout: emitLogCb}, ->
           console.log 'Starting', composeProjectName
+
+          bigboatComposeServices = _.omit data.app.bigboatCompose, 'name', 'version', 'pic', 'description'
+          sshServices = {}
+          for srvName, srv of bigboatComposeServices
+            sshServices[srvName] = sshOpts if sshOpts = (srv.ssh or srv.enable_ssh)
+
+          unless sshServices is {}
+            for srvName, sshOpts of sshServices
+              node = shell.exec "docker service ps #{composeProjectName}_#{srvName} | awk '{print $4}' | grep -v NODE"
+              node = node?.trim()
+              if node
+                sshSrv = ssh instance, srvName, node, sshOpts, config
+                composition.services["#{srvName}-ssh"] = sshSrv
+
+                console.log 'SSH:', JSON.stringify composition, null, 2
+                composeWithSsh = yaml.safeDump composition
+                lib.writeFile scriptWithSshPath, composeWithSsh, ->
+                  args = ['stack', 'up', '-c', scriptWithSshPath, '--prune', '--resolve-image=always', composeProjectName]
+                  lib.runCmd 'docker', args, env, {stderr: emitLogCb, stdout: emitLogCb}, ->
+                    console.log 'Starting', composeProjectName, 'with SSH.'
+              else
+                console.error "Could not find the target service '#{composeProjectName}_#{srvName}' or the node it lives on."
+
     eventEmitter
 
   stop: (instance, data) ->
