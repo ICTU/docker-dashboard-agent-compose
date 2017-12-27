@@ -69,6 +69,7 @@ module.exports = (config) ->
       mode: 'replicated'
       endpoint_mode: 'dnsrr'
       resources: defaultResources
+      placement: constraints: ['node.role == worker']
     , service.deploy
 
   _addNetworks: addNetworks = (doc) ->
