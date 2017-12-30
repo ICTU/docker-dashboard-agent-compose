@@ -46,7 +46,8 @@ agent.on 'start', (data) ->
           data: logData
         mqtt.publish '/agent/docker/log/startup', event
 
-agent.on 'stop', (data) ->
+agent.on 'stop', stopHandler = (data) ->
+  console.log('stop', data)
   instanceName = data.instance.name
   stop = compose.stop instanceName, data
   stop.on 'teardown-log', (logData) ->
@@ -56,3 +57,9 @@ agent.on 'stop', (data) ->
     mqtt.publish '/agent/docker/log/teardown', event
 
 require('./src/coffee/storage') agent, mqtt, config
+
+mqtt.on 'message', (topic, data) -> 
+  switch topic
+    when '/commands/instance/stop' then stopHandler JSON.parse data
+
+mqtt.subscribe('/commands/instance/stop')
