@@ -24,7 +24,7 @@ require('./src/js/os-monitor')(publishSystemMem, publishSystemUptime, publishSys
 compose = require('./src/coffee/compose/actions') config
 
 agent = server {name: packageJson.name , version: packageJson.version}, config
-agent.on 'start', (data) ->
+agent.on 'start', startHandler = (data) ->
   instanceName = data.instance.name
   options = data.instance.options
 
@@ -61,5 +61,7 @@ require('./src/coffee/storage') agent, mqtt, config
 mqtt.on 'message', (topic, data) -> 
   switch topic
     when '/commands/instance/stop' then stopHandler JSON.parse data
+    when '/commands/instance/start' then startHandler JSON.parse data
 
 mqtt.subscribe('/commands/instance/stop')
+mqtt.subscribe('/commands/instance/start')
