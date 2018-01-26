@@ -62,7 +62,7 @@ module.exports = (config) ->
 
           unless sshServices is {}
             for srvName, sshOpts of sshServices
-              node = shell.exec "docker service ps #{composeProjectName}_#{srvName} | awk '{print $4}' | grep -v NODE"
+              node = shell.exec "docker service ps #{composeProjectName}_#{srvName} | awk 'NR==2{print $4}'"
               node = node?.trim()
               if node
                 sshSrv = ssh instance, srvName, node, sshOpts, config
