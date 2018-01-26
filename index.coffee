@@ -28,8 +28,11 @@ agent.on 'start', startHandler = (data) ->
   instanceName = data.instance.name
   options = data.instance.options
 
-  compose.config instanceName, data.app.definition, data, (err, composev2) ->
+  console.log(data.app.dockerCompose)
+  
+  compose.config instanceName, data.app.dockerCompose, data, (err, composev2) ->
     if err
+      console.log(err)
       mqtt.publish '/agent/docker/log/startup/error',
         instance: instanceName
         data: err

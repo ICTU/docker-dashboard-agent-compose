@@ -15,7 +15,7 @@ module.exports = (config) ->
   composeProject = (instance) -> "#{config.domain}-#{instance}".replace '.', '-'
 
   config: (instance, compose, data, cb) ->
-    lib.saveScript config, 'docker-compose.original', instance, yaml.safeDump(compose), (err, filePath) ->
+    lib.saveScript config, 'docker-compose.original', instance, compose, (err, filePath) ->
       env = buildEnv config, data
       res = shell.exec("docker-compose --file #{filePath} config", env: env)
       if res.code is 0
