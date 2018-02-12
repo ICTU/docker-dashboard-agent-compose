@@ -2,7 +2,6 @@ fs            = require 'fs-extra'
 path          = require 'path'
 Mqtt          = require '@bigboat/mqtt-client'
 config        = require './src/coffee/config'
-server        = require './src/coffee/server'
 packageJson   = require './package.json'
 
 try
@@ -22,9 +21,7 @@ publishSystemCpu = (data) -> mqtt.publish '/system/cpu', data
 require('./src/js/os-monitor')(publishSystemMem, publishSystemUptime, publishSystemCpu)
 
 compose = require('./src/coffee/compose/actions') config
-
-agent = server {name: packageJson.name , version: packageJson.version}, config
-agent.on 'start', startHandler = (data) ->
+startHandler = (data) ->
   instanceName = data.instance.name
   options = data.instance.options
 
@@ -49,7 +46,7 @@ agent.on 'start', startHandler = (data) ->
           data: logData
         mqtt.publish '/agent/docker/log/startup', event
 
-agent.on 'stop', stopHandler = (data) ->
+stopHandler = (data) ->
   console.log('stop', data)
   instanceName = data.instance.name
   stop = compose.stop instanceName, data
@@ -59,7 +56,7 @@ agent.on 'stop', stopHandler = (data) ->
       data: logData
     mqtt.publish '/agent/docker/log/teardown', event
 
-require('./src/coffee/storage') agent, mqtt, config
+require('./src/coffee/storage') mqtt, config
 
 mqtt.on 'message', (topic, data) -> 
   switch topic
