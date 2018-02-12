@@ -62,15 +62,19 @@ module.exports = (config) ->
     delete service.network_mode
 
   _addDeploymentSettings: addDeploymentSettings = (service) ->
+    service.deploy = _.merge {}, service.deploy,
+      mode: 'replicated'
+      endpoint_mode: 'dnsrr'
+
+  _addResourcesLimits: addResourcesLimits = (service) ->
     defaultResources =
       limits:
         memory: '1G'
-    service.deploy = _.merge {},
-      mode: 'replicated'
-      endpoint_mode: 'dnsrr'
-      resources: defaultResources
+    service.deploy = _.merge {}, {resources: defaultResources}, service.deploy
+
+  _addPlacementConstraints: addPlacementConstraints = (service) ->
+    service.deploy = _.merge {}, service.deploy, 
       placement: constraints: ['node.role == worker']
-    , service.deploy
 
   _addNetworks: addNetworks = (doc) ->
     doc.networks = public: external: name: config.network.name
@@ -85,6 +89,8 @@ module.exports = (config) ->
     addNetworks doc
     for serviceName, service of doc.services
       addDeploymentSettings service
+      addPlacementConstraints service
+      addResourcesLimits service
       addExtraLabels service
       addNetworkSettings serviceName, service, instance, doc
       addVolumeMapping service, options
@@ -94,6 +100,6 @@ module.exports = (config) ->
 
     doc.version = '3.3'
     delete doc.volumes
-    # console.log JSON.stringify doc, null, 2
+    console.log JSON.stringify doc, null, 2
 
     doc
