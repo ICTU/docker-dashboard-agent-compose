@@ -1,7 +1,11 @@
-env = require './env'
+yaml  = require 'js-yaml'
+env   = require './env'
 
 graphScanEnabled = env.get 'GRAPH_SCAN_ENABLED', true
 if graphScanEnabled is 'false' then graphScanEnabled = false
+
+deployment_placement = JSON.parse env.get('DEPLOY_PLACEMENT', null)
+deployment_placement ?= constraints: ['node.role == worker']
 
 config =
   domain: env.assert 'DOMAIN'
@@ -10,6 +14,8 @@ config =
   docker:
     graph:
       path: env.get 'DOCKER_GRAPH_PATH', '/var/lib/docker'
+  swarm:
+    deployment_placement: deployment_placement
   compose:
     scriptBaseDir: env.assert 'SCRIPT_BASE_DIR'
   network:

@@ -74,7 +74,7 @@ module.exports = (config) ->
 
   _addPlacementConstraints: addPlacementConstraints = (service) ->
     service.deploy = _.merge {}, service.deploy, 
-      placement: constraints: ['node.role == worker']
+      placement: config.swarm.deployment_placement
 
   _addNetworks: addNetworks = (doc) ->
     doc.networks = public: external: name: config.network.name
