@@ -65,6 +65,8 @@ module.exports = (config) ->
     defaultResources =
       limits:
         memory: '1G'
+      reservations:
+        memory: '1G'
     service.deploy = _.merge {},
       mode: 'replicated'
       endpoint_mode: 'dnsrr'
