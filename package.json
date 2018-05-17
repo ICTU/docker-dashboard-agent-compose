@@ -4,14 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start":
-      "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
-    "test":
-      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
-    "test:html":
-      "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report html lcov",
-    "test:watch":
-      "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
+    "mermaid": "for i in ./docs/*.mmd; do mmdc -i $i -o $i.png -t neutral; done",
+    "start": "./node_modules/.bin/forever --minUptime 2500 --spinSleepTime 5000 ./node_modules/.bin/coffee index.coffee",
+    "test": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report text lcov",
+    "test:html": "mocha --recursive --compilers coffee:coffee-script/register --require coffee-coverage/register-istanbul tests && istanbul report html lcov",
+    "test:watch": "mocha --recursive --compilers coffee:coffee-script/register --watch-extensions test.coffee --watch tests ",
     "precommit": "npm test",
     "prepush": "npm test"
   },
@@ -25,6 +22,7 @@
     "fs-extra": "^0.30.0",
     "js-yaml": "^3.6.1",
     "lodash": "^4.15.0",
+    "mermaid.cli": "^0.4.6",
     "mkdirp": "^0.5.1",
     "os-monitor": "^1.0.5",
     "path": "^0.12.7",

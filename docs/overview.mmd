@@ -1,0 +1,8 @@
+graph LR
+    MQTT --> id1(ComposeAgent)
+    id1(ComposeAgent) --> MQTT
+    id1(ComposeAgent) --> docker-compose
+    docker-compose --> DockerDaemon 
+    Dashboard -- HTTP --> id1(ComposeAgent)
+
+    style id1 fill:white,stroke:green,stroke-width:4px
