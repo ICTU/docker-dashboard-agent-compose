@@ -55,4 +55,76 @@ The following capabilities are removed:
 
 ## HTTP API
 
+This Agent exposes an HTTP api for starting and stopping of instances and the managemnt of buckets. This API is implemented by the [Agent API](https://github.com/ICTU/agent-api) library. This library can be reused by different Agent implementations as it only implements the API (contract) between the Dashboard and the 'Agent'. 
+
+
 ## MQTT
+
+### Subscriptions
+
+This component doesn't subscribe to topics.
+
+### Publications
+
+This component publishes information on the following topics
+
+- /network/info
+
+  Periodically publishes information about the network. Example:
+  ```
+  {
+    totalIps: 200,
+    usedIps: 31
+  }
+  ```
+
+- /dhcp/info
+
+  Not implemented.
+
+- /system/memory
+
+  Periodically publishes information about the available memory. Example:
+  ```
+  {
+      free: 4000000000,
+      total: 48000000000
+  }
+  ```
+
+- /system/uptime
+
+  Periodically publishes information about the system uptime.
+
+- /system/cpu
+
+  Periodically publishes information abou the system CPU usage. Example:
+  ```
+  {
+    loadavg: {
+      '1min': 0.5,
+      '5min': 1,
+      '15min': 1.6,
+    },
+    cpus: {
+      count: 8,
+      model: "Intel(R) Xeon(R) CPU E5-2670 v3 @ 2.30GHz"
+    }
+  }
+  ```
+
+- /agent/docker/log/startup
+
+  Publishes the startup logs of Docker Compose.
+
+- /agent/docker/log/startup/error
+
+  Publishes any error that occured during the start of Docker Compose.
+
+- /agent/docker/log/teardown
+
+  Publishes the teardown log of Docker Compose.
+
+- /agent/docker/pulling
+
+  Publishes information about pulling Docker images.
