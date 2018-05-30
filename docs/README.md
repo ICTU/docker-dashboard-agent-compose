@@ -36,7 +36,7 @@ services:
 ```
 
 ### Networking
-The agent makes all containers first-class citizens of a network. It does this by providing a network sidecar container. This container is responsible for acquiring an IP-address. See [ictu/pipes:2](https://github.com/ICTU/pipes)
+The agent makes all containers first-class citizens of a network. It does this by providing a network sidecar container. This container is responsible for acquiring an IP-address. See [ictu/pipes:2](https://github.com/ICTU/pipes). The reason of existance of this sidecar container is because certain tools are necessary in the container to acquire an IP address, of which a DHCP client is the most important one. It is not guaranteed that such tools are readily available in all containers. Furtermore; Docker supports the re-use of the network stack of another container. This way responsibilities are clearly separated. It also allows the agent to make certain assumptions about the functionality available in the sidecar container. Being, in this case, a specific DHCP client.
 
 ### Security
 The agent limits the use of certain Docker Compose features in order to secure the environment in which the instance is deployed.
