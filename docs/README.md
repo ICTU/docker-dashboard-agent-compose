@@ -56,13 +56,14 @@ The following capabilities are removed:
 ## HTTP API
 
 This Agent exposes an HTTP api for starting and stopping of instances and the managemnt of buckets. This API is implemented by the [Agent API](https://github.com/ICTU/agent-api) library. This library can be reused by different Agent implementations as it only implements the API (contract) between the Dashboard and the 'Agent'. 
+**The HTTP API is marked as technical debt. See the 'Technical Debt' section below.
 
 
 ## MQTT
 
 ### Subscriptions
 
-This component doesn't subscribe to topics.
+This component doesn't subscribe to topics. See the 'Technical Debt' section below.
 
 ### Publications
 
@@ -128,3 +129,8 @@ This component publishes information on the following topics
 - /agent/docker/pulling
 
   Publishes information about pulling Docker images.
+  
+## Technical debt
+
+This component currently contains some technical debt. Effort has been made to decouple component interactions by introducting MQTT as a message broker. This way all direct HTTP calls have been removed. The only remnant of this pre-MQTT era is the Agent HTTP API. In future developments the agent should accept MQTT messages, replacing the HTTP API completely.
+Chaning from HTTP to MQTT also impacts the Dashboard, since it calls the HTTP API.
