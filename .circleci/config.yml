@@ -39,7 +39,7 @@ jobs:
           shell: /bin/bash
           command: |
             docker build -t ictu/bigboat-agent-compose:latest .
-            docker tag ictu/bigboat-agent-compose:latest ictu/bigboat-agent-compose:${CIRCLE_BRANCH} .
+            docker tag ictu/bigboat-agent-compose:latest ictu/bigboat-agent-compose:${CIRCLE_BRANCH}
             docker login -u $DOCKER_USER -p $DOCKER_PASS
             docker push ictu/bigboat-agent-compose:latest
             docker push ictu/bigboat-agent-compose:${CIRCLE_BRANCH}          
