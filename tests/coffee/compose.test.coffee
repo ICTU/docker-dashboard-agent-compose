@@ -9,10 +9,10 @@ standardCfg =
 
 describe 'Compose', ->
   describe 'augmentCompose', ->
-    it 'should set the compose version to 2.1', ->
+    it 'should set the compose version to 2.2', ->
       doc = version: '1.0'
       compose(standardCfg).augmentCompose '', {}, doc
-      assert.equal doc.version, '2.1'
+      assert.equal doc.version, '2.2'
     it 'should delete the volumes section from the compose file', ->
       doc = volumes: {}
       assert.equal doc.volumes?, true

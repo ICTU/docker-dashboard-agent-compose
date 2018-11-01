@@ -129,6 +129,6 @@ module.exports = (config) ->
       addDockerMapping serviceName, service
       restrictCompose serviceName, service
 
-    doc.version = '2.1'
+    doc.version = '2.2'
     delete doc.volumes
     doc
