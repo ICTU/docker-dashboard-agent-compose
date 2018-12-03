@@ -249,3 +249,27 @@ describe 'Compose', ->
       service = labels: 'bigboat.service.type': 'service'
       doc = invokeTestSubject service, image: 'ictu/pipes:2'
       assert.equal doc.services['bb-net-service1'].image, 'ictu/pipes:2'
+
+    invokeTestSubjectToNormalize = (service, instance, domainName) ->
+      doc = services: {}
+      config = Object.assign {}, standardCfg,
+        domain: domainName
+        tld: 'com'
+        net_container: Object.assign {}, standardCfg.net_container, image: 'ictu/pipes:2'
+      compose(config)._addNetworkContainer 'service1', service, instance, doc
+      doc
+
+    it 'should normalize the host name when needed', ->
+      service = labels: 'bigboat.service.type': 'service'
+      doc = invokeTestSubjectToNormalize service, 'INStance2_0123456789_0123456789_0123456789_0123456789_0123456789_0123456789', 'google'
+      assert.equal doc.services['bb-net-service1'].hostname, 'service1.instance2-0123456789-0123456789-0123456789-0.google.com'
+
+    it 'should fix up the host name, if the domain is too long, but this should never happen in practice', ->
+      service = labels: 'bigboat.service.type': 'service'
+      doc = invokeTestSubjectToNormalize service, 'ins', 'google-0123456789-0123456789-0123456789-0123456789-0123456789'
+      assert.equal doc.services['bb-net-service1'].hostname, 'service1.ins.google-0123456789-0123456789-0123456789-012345678-x'
+
+    it 'should not change the host name if not needed', ->
+      service = labels: 'bigboat.service.type': 'service'
+      doc = invokeTestSubjectToNormalize service, 'instance2', 'google'
+      assert.equal doc.services['bb-net-service1'].hostname, 'service1.instance2.google.com'

@@ -5,6 +5,15 @@ randomMac = require 'random-mac'
 
 composeLib = require './compose/lib.coffee'
 
+assembleHostname = (serviceName, instanceName, domain) ->
+  hostname = "#{serviceName}.#{instanceName}.#{domain}".toLowerCase().replace(/_/g, '-')
+  if hostname.length > 64
+    if 64 + instanceName.length - hostname.length > 0
+      hostname = "#{serviceName}.#{instanceName.substr(0, 64 + instanceName.length - hostname.length)}.#{domain}".toLowerCase().replace(/_/g, '-')
+    else
+      hostname = hostname.substring(0, 62) + '-x'
+  return hostname
+
 module.exports = (config) ->
   _restrictCompose: restrictCompose = (serviceName, service) ->
     delete service.cap_add
@@ -81,7 +90,7 @@ module.exports = (config) ->
       subDomain = "#{instance}.#{config.domain}.#{config.tld}"
       netcontainer =
         image: config.net_container.image
-        hostname: "#{serviceName}.#{subDomain}"
+        hostname: assembleHostname serviceName, instance, "#{config.domain}.#{config.tld}" #"#{serviceName}.#{subDomain}" #normalizeHostname "#{serviceName}.#{subDomain}"
         networks: appsnet: aliases: [serviceName]
         dns: ['10.25.55.2', '10.25.55.3']
         dns_search: subDomain
