@@ -75,7 +75,7 @@ module.exports = (config) ->
               checkAgain = false
               for netContainer in netContainerNames
                 tries = tries + 1
-                res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec #{netContainer} #{config.net_container.startcheck}"
+                res = shell.exec "docker-compose -f #{scriptPath} -p #{composeProjectName} exec -T #{netContainer} #{config.net_container.startcheck}"
                 if res.code is 1 then checkAgain = true
               if checkAgain
                 if tries <= 48 # we try for four minutes before giving up
